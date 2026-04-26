@@ -162,6 +162,24 @@ function CheckinPage() {
           </div>
         </div>
 
+        {/* Calendar */}
+        <div className="mt-10">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-xl">打卡日历</h2>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-2.5 rounded-full bg-primary/40" /> 已打卡
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-2.5 rounded-full ring-2 ring-primary/60" /> 起始日
+              </span>
+            </div>
+          </div>
+          <div className="mt-4 rounded-3xl border border-border/60 bg-card p-3 shadow-soft">
+            <CheckinCalendar checkins={checkins} startDate={profile?.quit_start_date ?? null} />
+          </div>
+        </div>
+
         {/* History */}
         <div className="mt-10">
           <h2 className="font-display text-xl">最近打卡</h2>
