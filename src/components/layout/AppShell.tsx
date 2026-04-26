@@ -5,9 +5,9 @@ import { cn } from "@/lib/utils";
 
 const nav = [
   { to: "/", label: "首页", icon: Home },
+  { to: "/checkin", label: "打卡", icon: CalendarCheck },
   { to: "/community", label: "社区", icon: Users },
   { to: "/confessions", label: "树洞", icon: Heart },
-  { to: "/checkin", label: "打卡", icon: CalendarCheck },
   { to: "/learn", label: "学习", icon: BookOpen },
 ];
 
