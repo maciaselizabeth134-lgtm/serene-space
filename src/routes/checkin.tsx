@@ -4,7 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CheckCircle2, Flame, Calendar as CalendarIcon, RefreshCw } from "lucide-react";
+import { CheckCircle2, Calendar as CalendarIcon, RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/checkin")({
   head: () => ({
@@ -118,10 +118,8 @@ function CheckinPage() {
         <p className="mt-1 text-sm text-muted-foreground">每一次的坚持,都是给未来的礼物。</p>
 
         {/* Stats */}
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        <div className="mt-6">
           <StatCard icon={<CalendarIcon className="h-5 w-5" />} label="戒色天数" value={loading ? "—" : `${totalDays}`} suffix="天" highlight />
-          <StatCard icon={<Flame className="h-5 w-5" />} label="连续打卡" value={loading ? "—" : `${streak}`} suffix="天" />
-          <StatCard icon={<CheckCircle2 className="h-5 w-5" />} label="累计打卡" value={loading ? "—" : `${checkins.length}`} suffix="次" />
         </div>
 
         {/* Today */}
