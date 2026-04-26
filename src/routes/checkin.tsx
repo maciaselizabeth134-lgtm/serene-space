@@ -4,7 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CheckCircle2, Flame, Calendar as CalendarIcon, RefreshCw } from "lucide-react";
+import { CheckCircle2, Calendar as CalendarIcon, RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/checkin")({
   head: () => ({
@@ -101,16 +101,6 @@ function CheckinPage() {
   const startDate = profile?.quit_start_date ?? today;
   const totalDays = Math.max(0, daysBetween(startDate, today)) + 1;
 
-  // Calculate streak (continuous checkins ending today or yesterday)
-  const checkinSet = new Set(checkins.map((c) => c.checkin_date));
-  let streak = 0;
-  let cursor = new Date();
-  if (!checkinSet.has(today)) cursor.setDate(cursor.getDate() - 1);
-  for (let i = 0; i < 400; i++) {
-    const ds = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
-    if (checkinSet.has(ds)) { streak++; cursor.setDate(cursor.getDate() - 1); } else break;
-  }
-
   return (
     <AppShell>
       <div className="mx-auto max-w-3xl px-4 py-8">
@@ -118,10 +108,8 @@ function CheckinPage() {
         <p className="mt-1 text-sm text-muted-foreground">每一次的坚持,都是给未来的礼物。</p>
 
         {/* Stats */}
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        <div className="mt-6">
           <StatCard icon={<CalendarIcon className="h-5 w-5" />} label="戒色天数" value={loading ? "—" : `${totalDays}`} suffix="天" highlight />
-          <StatCard icon={<Flame className="h-5 w-5" />} label="连续打卡" value={loading ? "—" : `${streak}`} suffix="天" />
-          <StatCard icon={<CheckCircle2 className="h-5 w-5" />} label="累计打卡" value={loading ? "—" : `${checkins.length}`} suffix="次" />
         </div>
 
         {/* Today */}
