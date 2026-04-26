@@ -51,7 +51,7 @@ function CommunityPage() {
     setLoading(true);
     let query = supabase
       .from("posts")
-      .select("*, profiles(username, avatar_url)")
+      .select("*")
       .order("created_at", { ascending: false })
       .limit(50);
     if (filter !== "all") query = query.eq("category", filter);
@@ -62,13 +62,19 @@ function CommunityPage() {
       return;
     }
     const ids = (data ?? []).map((p) => p.id);
-    const [likesRes, commentsRes, myLikesRes] = await Promise.all([
+    const userIds = Array.from(new Set((data ?? []).map((p) => p.user_id)));
+    const [likesRes, commentsRes, myLikesRes, profilesRes] = await Promise.all([
       supabase.from("likes").select("post_id").in("post_id", ids),
       supabase.from("comments").select("post_id").in("post_id", ids),
       user
         ? supabase.from("likes").select("post_id").in("post_id", ids).eq("user_id", user.id)
         : Promise.resolve({ data: [] as { post_id: string }[] }),
+      userIds.length
+        ? supabase.from("profiles").select("id, username, avatar_url").in("id", userIds)
+        : Promise.resolve({ data: [] as { id: string; username: string; avatar_url: string | null }[] }),
     ]);
+    const profileMap = new Map<string, { username: string; avatar_url: string | null }>();
+    (profilesRes.data ?? []).forEach((p) => profileMap.set(p.id, { username: p.username, avatar_url: p.avatar_url }));
     const likeMap = new Map<string, number>();
     (likesRes.data ?? []).forEach((l) => likeMap.set(l.post_id, (likeMap.get(l.post_id) ?? 0) + 1));
     const commentMap = new Map<string, number>();
@@ -76,7 +82,8 @@ function CommunityPage() {
     const myLikes = new Set((myLikesRes.data ?? []).map((l) => l.post_id));
     setPosts(
       (data ?? []).map((p) => ({
-        ...(p as Post),
+        ...(p as Omit<Post, "profiles" | "likes_count" | "comments_count" | "liked">),
+        profiles: profileMap.get(p.user_id) ?? null,
         likes_count: likeMap.get(p.id) ?? 0,
         comments_count: commentMap.get(p.id) ?? 0,
         liked: myLikes.has(p.id),
