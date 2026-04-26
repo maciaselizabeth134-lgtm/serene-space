@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LearnRouteImport } from './routes/learn'
 import { Route as ConfessionsRouteImport } from './routes/confessions'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CheckinRouteImport } from './routes/checkin'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 
+const LearnRoute = LearnRouteImport.update({
+  id: '/learn',
+  path: '/learn',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConfessionsRoute = ConfessionsRouteImport.update({
   id: '/confessions',
   path: '/confessions',
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/checkin': typeof CheckinRoute
   '/community': typeof CommunityRoute
   '/confessions': typeof ConfessionsRoute
+  '/learn': typeof LearnRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/checkin': typeof CheckinRoute
   '/community': typeof CommunityRoute
   '/confessions': typeof ConfessionsRoute
+  '/learn': typeof LearnRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,27 @@ export interface FileRoutesById {
   '/checkin': typeof CheckinRoute
   '/community': typeof CommunityRoute
   '/confessions': typeof ConfessionsRoute
+  '/learn': typeof LearnRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/checkin' | '/community' | '/confessions'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/checkin'
+    | '/community'
+    | '/confessions'
+    | '/learn'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/checkin' | '/community' | '/confessions'
-  id: '__root__' | '/' | '/auth' | '/checkin' | '/community' | '/confessions'
+  to: '/' | '/auth' | '/checkin' | '/community' | '/confessions' | '/learn'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/checkin'
+    | '/community'
+    | '/confessions'
+    | '/learn'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,10 +99,18 @@ export interface RootRouteChildren {
   CheckinRoute: typeof CheckinRoute
   CommunityRoute: typeof CommunityRoute
   ConfessionsRoute: typeof ConfessionsRoute
+  LearnRoute: typeof LearnRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/learn': {
+      id: '/learn'
+      path: '/learn'
+      fullPath: '/learn'
+      preLoaderRoute: typeof LearnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/confessions': {
       id: '/confessions'
       path: '/confessions'
@@ -125,6 +155,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckinRoute: CheckinRoute,
   CommunityRoute: CommunityRoute,
   ConfessionsRoute: ConfessionsRoute,
+  LearnRoute: LearnRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
