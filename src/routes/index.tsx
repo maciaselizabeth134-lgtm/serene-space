@@ -36,11 +36,9 @@ function HomePage() {
       const start = data?.quit_start_date;
       if (!start) { setDays(1); return; }
       const d0 = new Date(start + "T00:00:00");
-      const d1 = new Date();
-      const diff = Math.floor((d1.getTime() - new Date(d1.getFullYear(), d1.getMonth(), d1.getDate()).getTime() === 0 ? 0 : 0));
-      const today = new Date(d1.getFullYear(), d1.getMonth(), d1.getDate());
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const total = Math.max(0, Math.round((today.getTime() - d0.getTime()) / 86400000)) + 1;
-      void diff;
       setDays(total);
     })();
   }, [user, authLoading]);
