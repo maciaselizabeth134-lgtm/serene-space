@@ -101,16 +101,6 @@ function CheckinPage() {
   const startDate = profile?.quit_start_date ?? today;
   const totalDays = Math.max(0, daysBetween(startDate, today)) + 1;
 
-  // Calculate streak (continuous checkins ending today or yesterday)
-  const checkinSet = new Set(checkins.map((c) => c.checkin_date));
-  let streak = 0;
-  let cursor = new Date();
-  if (!checkinSet.has(today)) cursor.setDate(cursor.getDate() - 1);
-  for (let i = 0; i < 400; i++) {
-    const ds = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
-    if (checkinSet.has(ds)) { streak++; cursor.setDate(cursor.getDate() - 1); } else break;
-  }
-
   return (
     <AppShell>
       <div className="mx-auto max-w-3xl px-4 py-8">
