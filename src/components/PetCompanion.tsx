@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { Send, X, Sparkles } from "lucide-react";
+import { Send, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PetAvatar } from "./PetAvatar";
 
 type Msg = { role: "user" | "assistant"; content: string };
+type PetState = "idle" | "happy" | "talking" | "sleeping" | "dragging";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pet-chat`;
 const STORAGE_KEY = "pet-companion-pos";
+const SIZE = 72;
+const SLEEP_MS = 30_000;
 
 const GREETING: Msg = {
   role: "assistant",
@@ -15,61 +19,151 @@ const GREETING: Msg = {
 export function PetCompanion() {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const [target, setTarget] = useState<{ x: number; y: number } | null>(null);
   const [messages, setMessages] = useState<Msg[]>([GREETING]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const dragRef = useRef<{ dx: number; dy: number; moved: boolean } | null>(null);
+  const [state, setState] = useState<PetState>("idle");
+  const [bubble, setBubble] = useState<string | null>(null);
+  const [facing, setFacing] = useState<1 | -1>(1); // 1 = facing right, -1 = left
+  const dragRef = useRef<{ dx: number; dy: number; moved: boolean; downAt: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const lastActivityRef = useRef<number>(Date.now());
 
-  // Initialize position bottom-right and restore from storage
+  // Initial position
   useEffect(() => {
     if (typeof window === "undefined") return;
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
         const p = JSON.parse(saved);
-        setPos(clampToViewport(p.x, p.y));
+        const c = clamp(p.x, p.y);
+        setPos(c);
         return;
       } catch {}
     }
-    setPos({ x: window.innerWidth - 96, y: window.innerHeight - 180 });
+    setPos({ x: window.innerWidth - 110, y: window.innerHeight - 200 });
   }, []);
 
+  // Resize clamp
   useEffect(() => {
-    if (!pos) return;
-    const onResize = () => setPos((p) => (p ? clampToViewport(p.x, p.y) : p));
+    const onResize = () => setPos((p) => (p ? clamp(p.x, p.y) : p));
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [pos]);
+  }, []);
 
+  // Auto-scroll chat
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, open]);
 
-  function clampToViewport(x: number, y: number) {
-    const size = 64;
-    const maxX = window.innerWidth - size - 8;
-    const maxY = window.innerHeight - size - 8;
+  function clamp(x: number, y: number) {
+    const maxX = window.innerWidth - SIZE - 8;
+    const maxY = window.innerHeight - SIZE - 8;
     return { x: Math.max(8, Math.min(x, maxX)), y: Math.max(8, Math.min(y, maxY)) };
   }
 
+  // ---- Idle wandering: pick a random nearby target periodically ----
+  useEffect(() => {
+    if (open || state === "dragging") return;
+    const id = setInterval(() => {
+      if (!pos || dragRef.current) return;
+      // chance to wander
+      if (Math.random() < 0.55) {
+        const dx = (Math.random() - 0.5) * 220;
+        const dy = (Math.random() - 0.5) * 160;
+        const t = clamp(pos.x + dx, pos.y + dy);
+        setTarget(t);
+      }
+    }, 4500);
+    return () => clearInterval(id);
+  }, [pos, open, state]);
+
+  // ---- Move toward target each frame (smooth lerp) ----
+  useEffect(() => {
+    if (!target || !pos) return;
+    let raf: number;
+    const step = () => {
+      setPos((cur) => {
+        if (!cur) return cur;
+        const dx = target.x - cur.x;
+        const dy = target.y - cur.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 0.6) { setTarget(null); return cur; }
+        if (dx > 1) setFacing(1);
+        else if (dx < -1) setFacing(-1);
+        const speed = Math.min(2, dist * 0.06);
+        const nx = cur.x + (dx / dist) * speed;
+        const ny = cur.y + (dy / dist) * speed;
+        return { x: nx, y: ny };
+      });
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target, pos]);
+
+  // ---- Sleep after inactivity ----
+  useEffect(() => {
+    const bumpActivity = () => {
+      lastActivityRef.current = Date.now();
+      if (state === "sleeping") setState("idle");
+    };
+    window.addEventListener("pointermove", bumpActivity);
+    window.addEventListener("keydown", bumpActivity);
+    const id = setInterval(() => {
+      if (open) return;
+      if (Date.now() - lastActivityRef.current > SLEEP_MS && state !== "sleeping" && state !== "dragging") {
+        setState("sleeping");
+      }
+    }, 2000);
+    return () => {
+      window.removeEventListener("pointermove", bumpActivity);
+      window.removeEventListener("keydown", bumpActivity);
+      clearInterval(id);
+    };
+  }, [state, open]);
+
+  // Show transient bubble messages
+  function flashBubble(text: string, ms = 2400) {
+    setBubble(text);
+    setTimeout(() => setBubble((b) => (b === text ? null : b)), ms);
+  }
+
+  // ---- Drag handling ----
   function onPointerDown(e: React.PointerEvent) {
     if (!pos) return;
-    (e.target as Element).setPointerCapture?.(e.pointerId);
-    dragRef.current = { dx: e.clientX - pos.x, dy: e.clientY - pos.y, moved: false };
+    (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+    dragRef.current = { dx: e.clientX - pos.x, dy: e.clientY - pos.y, moved: false, downAt: Date.now() };
+    setTarget(null);
   }
   function onPointerMove(e: React.PointerEvent) {
     if (!dragRef.current) return;
     const nx = e.clientX - dragRef.current.dx;
     const ny = e.clientY - dragRef.current.dy;
-    if (Math.abs(e.movementX) + Math.abs(e.movementY) > 1) dragRef.current.moved = true;
-    setPos(clampToViewport(nx, ny));
+    if (Math.abs(e.movementX) + Math.abs(e.movementY) > 2) {
+      dragRef.current.moved = true;
+      if (state !== "dragging") setState("dragging");
+      if (e.movementX > 0) setFacing(1);
+      else if (e.movementX < 0) setFacing(-1);
+    }
+    setPos(clamp(nx, ny));
   }
   function onPointerUp() {
-    const moved = dragRef.current?.moved;
+    const drag = dragRef.current;
     dragRef.current = null;
     if (pos) localStorage.setItem(STORAGE_KEY, JSON.stringify(pos));
-    if (!moved) setOpen((v) => !v);
+    if (!drag) return;
+    if (drag.moved) {
+      setState("happy");
+      flashBubble("好刺激~ 🌀");
+      setTimeout(() => setState("idle"), 1200);
+    } else {
+      // tap = open / happy reaction
+      setState("happy");
+      setTimeout(() => setState(open ? "idle" : "talking"), 600);
+      setOpen((v) => !v);
+    }
   }
 
   async function send() {
@@ -80,6 +174,7 @@ export function PetCompanion() {
     const next = [...messages, userMsg];
     setMessages(next);
     setLoading(true);
+    setState("talking");
 
     try {
       const resp = await fetch(CHAT_URL, {
@@ -88,7 +183,6 @@ export function PetCompanion() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        // skip greeting from the prompt history
         body: JSON.stringify({ messages: next.filter((m) => m !== GREETING) }),
       });
       if (resp.status === 429) throw new Error("请求过于频繁,稍后再聊吧 🌿");
@@ -132,53 +226,85 @@ export function PetCompanion() {
       setMessages((prev) => [...prev, { role: "assistant", content: `🦌 ${msg}` }]);
     } finally {
       setLoading(false);
+      setState("happy");
+      setTimeout(() => setState("idle"), 1500);
     }
   }
 
   if (!pos) return null;
 
+  const centerX = pos.x + SIZE / 2;
+  const centerY = pos.y + SIZE / 2;
+
   return (
     <>
-      {/* Floating pet */}
-      <button
-        aria-label="打开小清宠物对话"
+      {/* Pet body */}
+      <div
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
-        style={{ left: pos.x, top: pos.y }}
+        onPointerCancel={onPointerUp}
+        role="button"
+        aria-label="小清 — 你的电子小鹿"
+        style={{
+          left: pos.x,
+          top: pos.y,
+          width: SIZE,
+          height: SIZE,
+        }}
         className={cn(
-          "fixed z-50 h-16 w-16 rounded-full select-none touch-none",
-          "bg-gradient-primary shadow-glow ring-4 ring-background/60 backdrop-blur",
-          "flex items-center justify-center text-3xl cursor-grab active:cursor-grabbing",
-          "transition-transform hover:scale-110",
-          !open && "animate-bounce-soft"
+          "fixed z-50 select-none touch-none cursor-grab active:cursor-grabbing",
+          state === "dragging" && "cursor-grabbing"
         )}
       >
-        <span className="drop-shadow-sm">🦌</span>
-        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] text-accent-foreground shadow">
-          <Sparkles className="h-3 w-3" />
-        </span>
-      </button>
+        <div
+          style={{ transform: `scaleX(${facing})`, transition: "transform 200ms" }}
+        >
+          <PetAvatar size={SIZE} state={state} originX={centerX} originY={centerY} />
+        </div>
+
+        {/* Speech bubble */}
+        {bubble && (
+          <div
+            className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-2xl bg-card/95 px-3 py-1.5 text-xs shadow-soft border border-border/60 animate-fade-up"
+          >
+            {bubble}
+            <div className="absolute left-1/2 -translate-x-1/2 top-full h-2 w-2 rotate-45 bg-card border-r border-b border-border/60" />
+          </div>
+        )}
+
+        {/* Sleeping z's drift */}
+        {state === "sleeping" && (
+          <div className="pointer-events-none absolute -top-3 right-0 text-xs text-primary/70 animate-float font-display">
+            zZ
+          </div>
+        )}
+      </div>
 
       {/* Chat panel */}
       {open && (
         <div
           style={{
-            left: Math.min(pos.x, window.innerWidth - 360),
-            top: Math.max(16, pos.y - 460),
+            left: Math.max(12, Math.min(pos.x - 130, window.innerWidth - 360)),
+            top: Math.max(16, pos.y - 470),
           }}
-          className="fixed z-50 w-[340px] max-w-[calc(100vw-24px)] h-[440px] rounded-3xl border border-border/60 bg-card/95 shadow-glow backdrop-blur-xl flex flex-col overflow-hidden"
+          className="fixed z-50 w-[340px] max-w-[calc(100vw-24px)] h-[440px] rounded-3xl border border-border/60 bg-card/95 shadow-glow backdrop-blur-xl flex flex-col overflow-hidden animate-scale-in"
         >
           <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 bg-gradient-to-r from-primary/10 to-accent/10">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-gradient-primary flex items-center justify-center text-lg">🦌</div>
+              <div className="h-9 w-9 flex items-center justify-center">
+                <PetAvatar size={36} state="happy" originX={centerX} originY={centerY} />
+              </div>
               <div>
                 <div className="font-display text-sm">小清</div>
-                <div className="text-[10px] text-muted-foreground">陪你走过这段路 · 在线</div>
+                <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                  陪你走过这段路 · 在线
+                </div>
               </div>
             </div>
             <button
-              onClick={() => setOpen(false)}
+              onClick={() => { setOpen(false); setState("idle"); }}
               className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-smooth"
               aria-label="关闭"
             >
@@ -191,13 +317,19 @@ export function PetCompanion() {
               <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
                 <div
                   className={cn(
-                    "max-w-[85%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap break-words leading-relaxed",
+                    "max-w-[85%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap break-words leading-relaxed animate-fade-in",
                     m.role === "user"
                       ? "bg-primary text-primary-foreground rounded-br-md"
                       : "bg-muted text-foreground rounded-bl-md"
                   )}
                 >
-                  {m.content || (loading && i === messages.length - 1 ? "..." : "")}
+                  {m.content || (loading && i === messages.length - 1 ? (
+                    <span className="inline-flex gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-foreground/50 animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="h-1.5 w-1.5 rounded-full bg-foreground/50 animate-bounce" style={{ animationDelay: "120ms" }} />
+                      <span className="h-1.5 w-1.5 rounded-full bg-foreground/50 animate-bounce" style={{ animationDelay: "240ms" }} />
+                    </span>
+                  ) : null)}
                 </div>
               </div>
             ))}
