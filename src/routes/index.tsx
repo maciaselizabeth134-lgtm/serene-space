@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Sparkles, Users, Heart, CalendarCheck, BookOpen, ArrowRight } from "lucide-react";
 import { getTodayQuote } from "@/lib/quotes";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 import heroImg from "@/assets/hero-zen.jpg";
 
 export const Route = createFileRoute("/")({
@@ -18,12 +21,34 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const quote = getTodayQuote();
+  const { user, loading: authLoading } = useAuth();
+  const [days, setDays] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) { setDays(null); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("quit_start_date")
+        .eq("id", user.id)
+        .single();
+      const start = data?.quit_start_date;
+      if (!start) { setDays(1); return; }
+      const d0 = new Date(start + "T00:00:00");
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const total = Math.max(0, Math.round((today.getTime() - d0.getTime()) / 86400000)) + 1;
+      setDays(total);
+    })();
+  }, [user, authLoading]);
+
   return (
     <AppShell>
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-hero opacity-60" aria-hidden />
-        <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 md:grid-cols-2 md:py-24">
+        <div className="relative mx-auto flex max-w-3xl flex-col items-center gap-10 px-4 py-16 md:py-24 text-center">
           <div className="animate-fade-up space-y-6">
             <div className="inline-flex items-center gap-2 rounded-full bg-card/70 px-4 py-1.5 text-xs text-muted-foreground backdrop-blur">
               <Sparkles className="h-3.5 w-3.5 text-primary" />
@@ -35,13 +60,11 @@ function HomePage() {
                 清心见性
               </span>
             </h1>
-            <p className="text-base text-muted-foreground md:text-lg leading-relaxed">
-              这里没有指责,只有同行。<br />
-              打卡每一天的坚持,分享每一份心得,<br />
-              在匿名树洞里安放脆弱,与无数同行者一起,<br />
-              一步一步,走向更清明的自己。
+            <p className="mx-auto max-w-xl text-base text-muted-foreground md:text-lg leading-relaxed">
+              这里没有指责,只有同行。打卡每一天的坚持,分享每一份心得,
+              在匿名树洞里安放脆弱,与无数同行者一起,一步一步,走向更清明的自己。
             </p>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap justify-center gap-3">
               <Link to="/checkin" className="group inline-flex items-center gap-2 rounded-full bg-gradient-primary px-7 py-3 text-sm font-medium text-primary-foreground shadow-soft transition-smooth hover:shadow-glow">
                 开始今日打卡
                 <ArrowRight className="h-4 w-4 transition-smooth group-hover:translate-x-1" />
@@ -51,14 +74,58 @@ function HomePage() {
               </Link>
             </div>
           </div>
-          <div className="relative animate-float">
-            <img
-              src={heroImg}
-              alt="水墨竹叶与莲花,寓意清净修身"
-              width={1536}
-              height={1024}
-              className="rounded-3xl shadow-soft"
-            />
+
+          {/* Circular Hero with day counter */}
+          <div className="relative animate-float mt-2">
+            {/* Soft outer glow rings */}
+            <div className="pointer-events-none absolute -inset-8 rounded-full bg-gradient-primary opacity-20 blur-3xl" aria-hidden />
+            <div className="pointer-events-none absolute -inset-2 rounded-full border border-primary/20" aria-hidden />
+
+            <div className="relative h-[300px] w-[300px] sm:h-[360px] sm:w-[360px] md:h-[420px] md:w-[420px] overflow-hidden rounded-full shadow-soft ring-1 ring-border/60">
+              <img
+                src={heroImg}
+                alt="水墨竹叶与莲花,寓意清净修身"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              {/* Translucent overlay for legibility */}
+              <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/55 to-background/80 backdrop-blur-[2px]" aria-hidden />
+
+              {/* Inner content */}
+              <div className="relative z-10 flex h-full w-full flex-col items-center justify-center px-6 text-center">
+                {authLoading ? (
+                  <div className="h-16 w-32 animate-pulse rounded-2xl bg-card/50" />
+                ) : user ? (
+                  <>
+                    <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">戒色天数</p>
+                    <div className="mt-3 flex items-baseline gap-2">
+                      <span className="font-display text-7xl md:text-8xl leading-none bg-gradient-to-b from-primary to-primary-glow bg-clip-text text-transparent">
+                        {days ?? "—"}
+                      </span>
+                      <span className="font-display text-2xl text-foreground/70">天</span>
+                    </div>
+                    <Link
+                      to="/checkin"
+                      className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-card/80 px-4 py-1.5 text-xs text-foreground/80 backdrop-blur transition-smooth hover:bg-card"
+                    >
+                      去打卡 <ArrowRight className="h-3 w-3" />
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">CLEAR HEART</p>
+                    <p className="mt-4 font-display text-2xl md:text-3xl leading-snug">
+                      开启你的<br />清心之旅
+                    </p>
+                    <Link
+                      to="/auth"
+                      className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-gradient-primary px-5 py-2 text-xs font-medium text-primary-foreground shadow-soft transition-smooth hover:shadow-glow"
+                    >
+                      登录 / 注册 <ArrowRight className="h-3 w-3" />
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </section>
