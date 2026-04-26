@@ -5,6 +5,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CheckCircle2, Calendar as CalendarIcon, RefreshCw } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/checkin")({
   head: () => ({
@@ -184,6 +186,26 @@ function CheckinPage() {
         </div>
       </div>
     </AppShell>
+  );
+}
+
+function CheckinCalendar({ checkins, startDate }: { checkins: Checkin[]; startDate: string | null }) {
+  const checkedDates = checkins.map((c) => new Date(c.checkin_date + "T00:00:00"));
+  const startedDate = startDate ? new Date(startDate + "T00:00:00") : undefined;
+  return (
+    <Calendar
+      mode="single"
+      selected={undefined}
+      modifiers={{
+        checked: checkedDates,
+        started: startedDate ? [startedDate] : [],
+      }}
+      modifiersClassNames={{
+        checked: "bg-primary/15 text-primary font-semibold rounded-full",
+        started: "ring-2 ring-primary/60 rounded-full",
+      }}
+      className={cn("p-3 pointer-events-auto mx-auto")}
+    />
   );
 }
 
