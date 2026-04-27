@@ -114,6 +114,24 @@ function CheckinPage() {
           <StatCard icon={<CalendarIcon className="h-5 w-5" />} label="戒色天数" value={loading ? "—" : `${totalDays}`} suffix="天" highlight />
         </div>
 
+        {/* Calendar (right under streak, no card frame) */}
+        <div className="mt-6">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-xl">打卡日历</h2>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-2.5 rounded-full bg-primary/40" /> 已打卡
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-2.5 rounded-full ring-2 ring-primary/60" /> 起始日
+              </span>
+            </div>
+          </div>
+          <div className="mt-3">
+            <CheckinCalendar checkins={checkins} startDate={profile?.quit_start_date ?? null} />
+          </div>
+        </div>
+
         {/* Today */}
         <div className="mt-8 rounded-3xl border border-border/60 bg-card p-6 shadow-soft">
           <div className="flex items-center justify-between">
@@ -159,24 +177,6 @@ function CheckinPage() {
             >
               {todayCheckin ? "更新今日记录" : "完成打卡"}
             </button>
-          </div>
-        </div>
-
-        {/* Calendar */}
-        <div className="mt-10">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display text-xl">打卡日历</h2>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5">
-                <span className="inline-block h-2.5 w-2.5 rounded-full bg-primary/40" /> 已打卡
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <span className="inline-block h-2.5 w-2.5 rounded-full ring-2 ring-primary/60" /> 起始日
-              </span>
-            </div>
-          </div>
-          <div className="mt-4 rounded-3xl border border-border/60 bg-card p-3 shadow-soft">
-            <CheckinCalendar checkins={checkins} startDate={profile?.quit_start_date ?? null} />
           </div>
         </div>
 
