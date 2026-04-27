@@ -123,6 +123,63 @@ export type Database = {
           },
         ]
       }
+      pet_rewards: {
+        Row: {
+          created_at: string
+          reward_date: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          reward_date: string
+          source: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          reward_date?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pet_state: {
+        Row: {
+          created_at: string
+          food: number
+          last_break_at: string | null
+          last_fed_at: string | null
+          last_satiety_date: string
+          satiety: number
+          total_fed: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          food?: number
+          last_break_at?: string | null
+          last_fed_at?: string | null
+          last_satiety_date?: string
+          satiety?: number
+          total_fed?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          food?: number
+          last_break_at?: string | null
+          last_fed_at?: string | null
+          last_satiety_date?: string
+          satiety?: number
+          total_fed?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       posts: {
         Row: {
           category: string
@@ -215,7 +272,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      ensure_pet_state: { Args: { _user_id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
