@@ -1,13 +1,13 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Users, Heart, CalendarCheck, BookOpen, Leaf } from "lucide-react";
+import { Home, Users, CalendarCheck, BookOpen, Leaf, Sparkles } from "lucide-react";
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 const nav = [
   { to: "/", label: "首页", icon: Home },
   { to: "/checkin", label: "打卡", icon: CalendarCheck },
+  { to: "/pet", label: "宠物", icon: Sparkles },
   { to: "/community", label: "社区", icon: Users },
-  { to: "/confessions", label: "树洞", icon: Heart },
   { to: "/learn", label: "学习", icon: BookOpen },
 ];
 

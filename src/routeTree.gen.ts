@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PetRouteImport } from './routes/pet'
 import { Route as LearnRouteImport } from './routes/learn'
 import { Route as ConfessionsRouteImport } from './routes/confessions'
 import { Route as CommunityRouteImport } from './routes/community'
@@ -20,6 +21,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PetRoute = PetRouteImport.update({
+  id: '/pet',
+  path: '/pet',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LearnRoute = LearnRouteImport.update({
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/community': typeof CommunityRoute
   '/confessions': typeof ConfessionsRoute
   '/learn': typeof LearnRoute
+  '/pet': typeof PetRoute
   '/profile': typeof ProfileRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +76,7 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRoute
   '/confessions': typeof ConfessionsRoute
   '/learn': typeof LearnRoute
+  '/pet': typeof PetRoute
   '/profile': typeof ProfileRoute
 }
 export interface FileRoutesById {
@@ -79,6 +87,7 @@ export interface FileRoutesById {
   '/community': typeof CommunityRoute
   '/confessions': typeof ConfessionsRoute
   '/learn': typeof LearnRoute
+  '/pet': typeof PetRoute
   '/profile': typeof ProfileRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/confessions'
     | '/learn'
+    | '/pet'
     | '/profile'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/confessions'
     | '/learn'
+    | '/pet'
     | '/profile'
   id:
     | '__root__'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/confessions'
     | '/learn'
+    | '/pet'
     | '/profile'
   fileRoutesById: FileRoutesById
 }
@@ -118,6 +130,7 @@ export interface RootRouteChildren {
   CommunityRoute: typeof CommunityRoute
   ConfessionsRoute: typeof ConfessionsRoute
   LearnRoute: typeof LearnRoute
+  PetRoute: typeof PetRoute
   ProfileRoute: typeof ProfileRoute
 }
 
@@ -128,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pet': {
+      id: '/pet'
+      path: '/pet'
+      fullPath: '/pet'
+      preLoaderRoute: typeof PetRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/learn': {
@@ -182,6 +202,7 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityRoute: CommunityRoute,
   ConfessionsRoute: ConfessionsRoute,
   LearnRoute: LearnRoute,
+  PetRoute: PetRoute,
   ProfileRoute: ProfileRoute,
 }
 export const routeTree = rootRouteImport
