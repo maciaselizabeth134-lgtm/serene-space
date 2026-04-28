@@ -237,6 +237,7 @@ function renderSpecies(
     case "senmian":    return renderSenmian(stage, t, eye, lid, mouthOpen, palette);
     case "yexing":     return renderYexing(stage, t, eye, lid, mouthOpen, palette);
     case "xingan":     return renderXingan(stage, t, eye, lid, mouthOpen, palette);
+    default:           return renderBaopao(stage, t, eye, lid, mouthOpen, palette);
   }
 }
 
