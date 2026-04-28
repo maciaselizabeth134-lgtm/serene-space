@@ -11,7 +11,10 @@ import {
   PetCreature,
   STAGE_LABELS,
   stageFromDays,
+  currentStageThreshold,
+  nextStageThreshold,
   type PetSpecies,
+  type PetStage,
 } from "@/components/PetCreature";
 
 export const Route = createFileRoute("/pet")({
