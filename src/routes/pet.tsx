@@ -423,7 +423,7 @@ function PetChat({
 }: {
   petName: string;
   species: PetSpecies;
-  stage: 0 | 1 | 2 | 3;
+  stage: PetStage;
   mood: { label: string; tone: string };
   brokeRecently: boolean;
   satiety: number;
