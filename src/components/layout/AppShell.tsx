@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Users, CalendarCheck, BookOpen, Leaf, Sparkles } from "lucide-react";
+import { Home, Users, CalendarCheck, Leaf, Sparkles, User } from "lucide-react";
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
@@ -8,7 +8,7 @@ const nav = [
   { to: "/checkin", label: "打卡", icon: CalendarCheck },
   { to: "/pet", label: "宠物", icon: Sparkles },
   { to: "/community", label: "社区", icon: Users },
-  { to: "/learn", label: "学习", icon: BookOpen },
+  { to: "/profile", label: "我的", icon: User },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
