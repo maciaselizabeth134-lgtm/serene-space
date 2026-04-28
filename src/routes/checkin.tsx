@@ -127,7 +127,7 @@ function CheckinPage() {
               </span>
             </div>
           </div>
-          <div className="mt-3">
+          <div className="mt-3 -mx-4">
             <CheckinCalendar checkins={checkins} startDate={profile?.quit_start_date ?? null} />
           </div>
         </div>
@@ -222,7 +222,17 @@ function CheckinCalendar({ checkins, startDate }: { checkins: Checkin[]; startDa
         checked: "bg-primary/15 text-primary font-semibold rounded-full",
         started: "ring-2 ring-primary/60 rounded-full",
       }}
-      className={cn("p-3 pointer-events-auto mx-auto")}
+      className={cn("p-0 pointer-events-auto w-full [--cell-size:2.6rem]")}
+      classNames={{
+        root: "w-full",
+        months: "flex flex-col gap-4 w-full",
+        month: "flex w-full flex-col gap-4",
+        table: "w-full border-collapse",
+        weekdays: "flex w-full",
+        weekday: "text-muted-foreground flex-1 select-none rounded-md text-[0.8rem] font-normal",
+        week: "mt-2 flex w-full",
+        day: "group/day relative aspect-square flex-1 select-none p-0 text-center",
+      }}
     />
   );
 }
