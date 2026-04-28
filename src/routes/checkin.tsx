@@ -12,7 +12,7 @@ export const Route = createFileRoute("/checkin")({
   head: () => ({
     meta: [
       { title: "每日打卡 — 清心" },
-      { name: "description", content: "记录你的戒色天数,每一次坚持都值得被见证。" },
+      { name: "description", content: "记录你的自律天数,每一次坚持都值得被见证。" },
     ],
   }),
   component: CheckinPage,
@@ -93,7 +93,7 @@ function CheckinPage() {
 
   const reset = async () => {
     if (!user) return;
-    if (!confirm("重新开始计时,会将戒色起始日期设为今天。确认吗?")) return;
+    if (!confirm("重新开始计时,会将自律起始日期设为今天。确认吗?")) return;
     const { error } = await supabase.from("profiles").update({ quit_start_date: today }).eq("id", user.id);
     if (error) return toast.error(error.message);
     toast.success("已重置,新的开始,加油。");
@@ -111,7 +111,7 @@ function CheckinPage() {
 
         {/* Stats */}
         <div className="mt-6">
-          <StatCard icon={<CalendarIcon className="h-5 w-5" />} label="戒色天数" value={loading ? "—" : `${totalDays}`} suffix="天" highlight />
+          <StatCard icon={<CalendarIcon className="h-5 w-5" />} label="自律天数" value={loading ? "—" : `${totalDays}`} suffix="天" highlight />
         </div>
 
         {/* Calendar (right under streak, no card frame) */}

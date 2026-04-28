@@ -10,9 +10,9 @@ import heroImg from "@/assets/hero-zen.jpg";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "清心 — 戒色社区 · 重获自由" },
-      { name: "description", content: "温暖治愈的戒色社区。每日打卡、心得交流、匿名树洞,与同行者一起重获自由。" },
-      { property: "og:title", content: "清心 — 戒色社区" },
+      { title: "清心 — 自律社区 · 重获自由" },
+      { name: "description", content: "温暖治愈的自律社区。每日打卡、心得交流、匿名树洞,与同行者一起重获自由。" },
+      { property: "og:title", content: "清心 — 自律社区" },
       { property: "og:description", content: "打卡 · 树洞 · 心得分享 — 与同行者一起重获自由与宁静。" },
     ],
   }),
@@ -143,10 +143,10 @@ function HomePage() {
       <section className="mx-auto max-w-6xl px-4 pb-16">
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           {[
-            { to: "/checkin", icon: CalendarCheck, title: "每日打卡", desc: "记录戒色天数,见证每一次坚持。" },
+            { to: "/checkin", icon: CalendarCheck, title: "每日打卡", desc: "记录自律天数,见证每一次坚持。" },
             { to: "/community", icon: Users, title: "心得社区", desc: "分享经验,互相鼓励,共同成长。" },
             { to: "/confessions", icon: Heart, title: "匿名树洞", desc: "卸下伪装,在这里诉说真实的自己。" },
-            { to: "/learn", icon: BookOpen, title: "学习资料", desc: "理念、方法、心法,系统了解戒色之道。" },
+            { to: "/learn", icon: BookOpen, title: "学习资料", desc: "理念、方法、心法,系统了解自律之道。" },
           ].map((f) => (
             <Link
               key={f.to}

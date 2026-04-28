@@ -23,8 +23,8 @@ export function getTodayQuote() {
 
 export const learningResources = [
   {
-    title: "为什么要戒色",
-    summary: "理解戒色的本质——这不是压抑,而是对生命能量的珍视与管理。",
+    title: "为什么要自律",
+    summary: "理解自律的本质——这不是压抑,而是对生命能量的珍视与管理。",
     category: "理念",
     readTime: "5 分钟",
   },
@@ -35,8 +35,8 @@ export const learningResources = [
     readTime: "7 分钟",
   },
   {
-    title: "运动与戒色的关系",
-    summary: "通过身体锻炼转移注意力,提升精气神,是戒色路上的最佳伙伴。",
+    title: "运动与自律的关系",
+    summary: "通过身体锻炼转移注意力,提升精气神,是自律路上的最佳伙伴。",
     category: "方法",
     readTime: "6 分钟",
   },

@@ -25,9 +25,9 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "清心 — 戒色社区" },
-      { name: "description", content: "一个温暖治愈的戒色社区,在这里打卡、记录、分享心得,与同行者一起重获自由与宁静。" },
-      { property: "og:title", content: "清心 — 戒色社区" },
+      { title: "清心 — 自律社区" },
+      { name: "description", content: "一个温暖治愈的自律社区,在这里打卡、记录、分享心得,与同行者一起重获自由与宁静。" },
+      { property: "og:title", content: "清心 — 自律社区" },
       { property: "og:description", content: "打卡 · 树洞 · 心得分享 — 与同行者一起,重获自由与宁静。" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

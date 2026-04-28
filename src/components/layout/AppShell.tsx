@@ -79,7 +79,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
       <footer className="hidden md:block border-t border-border/50 py-6 text-center text-xs text-muted-foreground">
-        清心 · 戒色社区 — 愿每一颗心都重获自由与宁静
+        清心 · 自律社区 — 愿每一颗心都重获自由与宁静
       </footer>
     </div>
   );

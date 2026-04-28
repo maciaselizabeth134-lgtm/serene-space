@@ -8,7 +8,7 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "登录 / 注册 — 清心" },
-      { name: "description", content: "登录或注册,加入清心戒色社区。" },
+      { name: "description", content: "登录或注册,加入清心自律社区。" },
     ],
   }),
   component: AuthPage,

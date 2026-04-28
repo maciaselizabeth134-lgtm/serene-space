@@ -10,7 +10,7 @@ export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
       { title: "我的 — 清心" },
-      { name: "description", content: "管理你的资料和戒色记录。" },
+      { name: "description", content: "管理你的资料和自律记录。" },
     ],
   }),
   component: ProfilePage,
@@ -103,12 +103,12 @@ function ProfilePage() {
               onChange={(e) => setBio(e.target.value)}
               rows={3}
               maxLength={200}
-              placeholder="说说你自己,或写下你的戒色宣言..."
+              placeholder="说说你自己,或写下你的自律宣言..."
               className="mt-1 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary resize-none"
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground">戒色起始日期</label>
+            <label className="text-xs font-medium text-muted-foreground">自律起始日期</label>
             <input
               type="date"
               value={startDate}
