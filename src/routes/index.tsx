@@ -96,7 +96,7 @@ function HomePage() {
                   <div className="h-16 w-32 animate-pulse rounded-2xl bg-card/50" />
                 ) : user ? (
                   <>
-                    <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">戒色天数</p>
+                    <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">自律天数</p>
                     <div className="mt-3 flex items-baseline gap-2">
                       <span className="font-display text-7xl md:text-8xl leading-none bg-gradient-to-b from-primary to-primary-glow bg-clip-text text-transparent">
                         {days ?? "—"}
