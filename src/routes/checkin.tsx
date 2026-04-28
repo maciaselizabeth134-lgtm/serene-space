@@ -219,8 +219,8 @@ function CheckinCalendar({ checkins, startDate }: { checkins: Checkin[]; startDa
         started: startedDate ? [startedDate] : [],
       }}
       modifiersClassNames={{
-        checked: "bg-primary/15 text-primary font-semibold rounded-full",
-        started: "ring-2 ring-primary/60 rounded-full",
+        checked: "bg-gradient-primary text-primary-foreground font-semibold rounded-full shadow-glow",
+        started: "ring-2 ring-primary/70 rounded-full",
       }}
       className={cn("p-0 pointer-events-auto w-full [--cell-size:2.1rem]")}
       classNames={{
