@@ -110,7 +110,16 @@ function PetPage() {
       supabase.from("pet_state").select("food, satiety, last_satiety_date, last_fed_at, last_break_at, total_fed").eq("user_id", user.id).single(),
     ]);
 
-    setPet(petRow ? { pet_type: petRow.pet_type as PetSpecies, nickname: petRow.nickname } : null);
+    const validIds = PET_CATALOG.map((p) => p.id) as string[];
+    if (petRow) {
+      const pt = validIds.includes(petRow.pet_type)
+        ? (petRow.pet_type as PetSpecies)
+        : null;
+      // Old/legacy pet types are no longer supported — force re-pick.
+      setPet(pt ? { pet_type: pt, nickname: petRow.nickname } : null);
+    } else {
+      setPet(null);
+    }
     setDays(daysSince(prof?.quit_start_date ?? null));
 
     if (ps) {
