@@ -1,32 +1,53 @@
 import { useEffect, useRef, useState } from "react";
 
-export type PetSpecies = "deer" | "fox" | "rabbit" | "panda" | "phoenix";
-export type PetStage = 0 | 1 | 2 | 3; // 幼年 / 成长 / 成熟 / 进化形态
+export type PetSpecies = "baopao" | "shantuan" | "senmian" | "yexing" | "xingan";
+export type PetStage = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
-export const PET_CATALOG: { id: PetSpecies; name: string; element: string; desc: string }[] = [
-  { id: "deer",    name: "灵鹿小清", element: "森林系", desc: "温柔治愈,陪你走过最静的夜。" },
-  { id: "fox",     name: "雪狐若曦", element: "雪原系", desc: "聪慧机敏,为你点亮内在的灵光。" },
-  { id: "rabbit",  name: "玉兔阿月", element: "月光系", desc: "纯净柔软,是你心底最先苏醒的安宁。" },
-  { id: "panda",   name: "竹熊禅禅", element: "竹林系", desc: "笨拙又坚定,稳稳地与你同行。" },
-  { id: "phoenix", name: "凤雏赤霞", element: "焰火系", desc: "终将涅槃,见证你的浴火重生。" },
+export const PET_CATALOG: {
+  id: PetSpecies;
+  name: string;
+  element: string;
+  desc: string;
+}[] = [
+  { id: "baopao",  name: "宝泡啾", element: "贪欲克服系", desc: "奶油金水晶幻兽,腹中藏光,与你一起克服无尽欲望。" },
+  { id: "shantuan", name: "闪团丸", element: "懒惰克服系", desc: "天空蓝雷霆能量球,带你冲破停滞与拖延。" },
+  { id: "senmian",  name: "森眠灵", element: "暴躁克服系", desc: "薄荷绿森林精灵,温柔安抚你的怒火。" },
+  { id: "yexing",   name: "夜星诺", element: "诱惑克服系", desc: "深紫星空小精灵,在诱惑前为你点亮清醒之星。" },
+  { id: "xingan",   name: "星安丸", element: "焦虑克服系", desc: "浅蓝星之果冻,稳稳承接你所有不安。" },
 ];
 
+// 7 stages: 初生 / 感知 / 成长 / 稳定 / 强化 / 觉醒 / 超越
+const STAGE_THRESHOLDS = [0, 3, 7, 15, 30, 60, 100];
+
 export function stageFromDays(days: number): PetStage {
-  if (days >= 100) return 3;
-  if (days >= 30) return 2;
-  if (days >= 7) return 1;
+  for (let i = STAGE_THRESHOLDS.length - 1; i >= 0; i--) {
+    if (days >= STAGE_THRESHOLDS[i]) return i as PetStage;
+  }
   return 0;
 }
 
-export const STAGE_LABELS = ["幼年期", "成长期", "成熟期", "圆满形态"];
+export function nextStageThreshold(stage: PetStage): number {
+  return STAGE_THRESHOLDS[Math.min(6, stage + 1)];
+}
 
-/**
- * 一个有生命感的小宠物 — 全部用 SVG + JS 动画驱动。
- * - 呼吸缩放 / 上下浮动 / 头部微转
- * - 随机眨眼、耳朵抖动、尾巴/翅膀摆动
- * - 眼球追随光标
- * - 阶段越高,体型越大、装饰越多
- */
+export function currentStageThreshold(stage: PetStage): number {
+  return STAGE_THRESHOLDS[stage];
+}
+
+export const STAGE_LABELS = [
+  "初生态", "感知态", "成长态", "稳定态", "强化态", "觉醒态", "超越态",
+];
+
+const PALETTES: Record<PetSpecies, {
+  light: string; mid: string; dark: string; core: string; glow: string; halo: string;
+}> = {
+  baopao:   { light: "#fff4d6", mid: "#ffd87a", dark: "#c98a2a", core: "#fff1a8", glow: "#ffd86b", halo: "#fff0c4" },
+  shantuan: { light: "#eaf5ff", mid: "#7fc7ff", dark: "#3a78c8", core: "#ffe98a", glow: "#7fdcff", halo: "#cfe9ff" },
+  senmian:  { light: "#eaffe8", mid: "#a6e6b6", dark: "#3a8a5a", core: "#c8ffd8", glow: "#9ce9a6", halo: "#dff7e2" },
+  yexing:   { light: "#e6dcff", mid: "#7a5fd0", dark: "#2a1f5a", core: "#fff2a0", glow: "#b29cff", halo: "#d8c8ff" },
+  xingan:   { light: "#eaf2ff", mid: "#b9c8ff", dark: "#5a6db5", core: "#ffffff", glow: "#cdd9ff", halo: "#e0e8ff" },
+};
+
 export function PetCreature({
   species,
   stage,
@@ -84,23 +105,27 @@ export function PetCreature({
     return () => window.removeEventListener("pointermove", onMove);
   }, []);
 
-  // Stage scale: bigger and more confident as it grows
-  const stageScale = [0.85, 0.95, 1.05, 1.15][stage];
+  // Stage 0..6 — slight growth and confidence
+  const stageScale = 0.78 + stage * 0.06;
   const breath = 1 + Math.sin(t / 700) * 0.025;
-  const bob = Math.sin(t / 600) * 2.2;
-  const tilt = Math.sin(t / 1300) * 3;
+  const bob = Math.sin(t / 600) * 2.6;
+  const tilt = Math.sin(t / 1300) * 2.4;
   const happy = state === "happy";
   const talking = state === "talking";
-
   const lid = blink ? 8 : 0;
   const mouthOpen = talking ? 1 + Math.abs(Math.sin(t / 130)) * 2.5 : 0.6;
 
+  const palette = PALETTES[species];
+
   return (
     <div ref={wrapRef} style={{ width: size, height: size }} className="relative select-none">
-      {/* glow halo */}
+      {/* outer glow halo, intensifies with stage */}
       <div
-        className="pointer-events-none absolute inset-0 rounded-full blur-3xl opacity-50"
-        style={{ background: `radial-gradient(closest-side, ${HALO[species]} 0%, transparent 70%)` }}
+        className="pointer-events-none absolute inset-0 rounded-full blur-3xl"
+        style={{
+          background: `radial-gradient(closest-side, ${palette.halo} 0%, transparent 70%)`,
+          opacity: 0.35 + stage * 0.08,
+        }}
       />
       <svg
         width={size}
@@ -108,84 +133,93 @@ export function PetCreature({
         viewBox="0 0 200 200"
         style={{
           transform: `translateY(${bob}px) rotate(${tilt * 0.4}deg) scale(${stageScale * breath})`,
-          transformOrigin: "100px 130px",
+          transformOrigin: "100px 110px",
           overflow: "visible",
         }}
       >
         <defs>
-          {/* shared gradients per species */}
           <radialGradient id={`body-${species}`} cx="50%" cy="40%" r="60%">
-            <stop offset="0%" stopColor={PALETTES[species].light} />
-            <stop offset="60%" stopColor={PALETTES[species].mid} />
-            <stop offset="100%" stopColor={PALETTES[species].dark} />
+            <stop offset="0%" stopColor={palette.light} stopOpacity="0.95" />
+            <stop offset="60%" stopColor={palette.mid} stopOpacity="0.9" />
+            <stop offset="100%" stopColor={palette.dark} stopOpacity="0.75" />
           </radialGradient>
-          <radialGradient id={`belly-${species}`} cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor={PALETTES[species].belly1} />
-            <stop offset="100%" stopColor={PALETTES[species].belly2} />
+          <radialGradient id={`core-${species}`} cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="40%" stopColor={palette.core} />
+            <stop offset="100%" stopColor={palette.glow} stopOpacity="0" />
           </radialGradient>
-          <radialGradient id="cheek" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#ff9aa2" stopOpacity="0.85" />
+          <radialGradient id={`halo-${species}`} cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={palette.glow} stopOpacity="0.9" />
+            <stop offset="100%" stopColor={palette.glow} stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="cheek-soft" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ff9aa2" stopOpacity="0.7" />
             <stop offset="100%" stopColor="#ff9aa2" stopOpacity="0" />
           </radialGradient>
         </defs>
 
-        {/* shadow */}
-        <ellipse cx="100" cy="184" rx="44" ry="6" fill="#000" opacity="0.18" />
+        {/* floating shadow */}
+        <ellipse cx="100" cy="180" rx={36 - stage * 1.5} ry="5" fill="#000" opacity="0.16" />
 
-        {/* species-specific body parts */}
-        {renderSpecies(species, stage, t, eye, lid, mouthOpen, happy)}
-
-        {/* stage decorations */}
-        {stage >= 2 && (
-          <g style={{ transform: `translate(${Math.sin(t / 900) * 4}px, ${Math.cos(t / 700) * 3}px)`, transformOrigin: "160px 30px" }}>
-            <path d="M158 30 q6 -4 10 2 q-5 6 -11 3 z" fill="#a3d9a5" />
-          </g>
-        )}
-        {stage >= 3 && (
-          <>
-            {/* halo ring above head */}
-            <ellipse
-              cx="100" cy="38" rx="26" ry="6"
-              fill="none"
-              stroke="#ffd86b"
-              strokeWidth="2"
-              opacity={0.85 + Math.sin(t / 400) * 0.15}
-            />
-            {/* sparkles */}
-            {[0,1,2,3].map((i) => {
-              const a = t / 800 + i * 1.6;
-              return (
-                <g key={i} transform={`translate(${100 + Math.cos(a) * 70}, ${110 + Math.sin(a) * 60})`}>
-                  <path d="M0 -4 L1 -1 L4 0 L1 1 L0 4 L-1 1 L-4 0 L-1 -1 Z" fill="#ffd86b" opacity="0.9" />
-                </g>
-              );
-            })}
-          </>
-        )}
+        {renderSpecies(species, stage, t, eye, lid, mouthOpen, happy, palette)}
       </svg>
     </div>
   );
 }
 
-const HALO: Record<PetSpecies, string> = {
-  deer: "#f9d8a7",
-  fox: "#c9e6ff",
-  rabbit: "#e9defc",
-  panda: "#d8f0d0",
-  phoenix: "#ffc8a8",
-};
+function Eyes({
+  cx1, cx2, cy, eye, lid, dark,
+}: { cx1: number; cx2: number; cy: number; eye: { x: number; y: number }; lid: number; dark: string }) {
+  return (
+    <g>
+      <ellipse cx={cx1} cy={cy} rx="7" ry="8" fill="#fff" />
+      <ellipse cx={cx2} cy={cy} rx="7" ry="8" fill="#fff" />
+      <circle cx={cx1 + eye.x} cy={cy + eye.y} r="4" fill="#1a1428" />
+      <circle cx={cx2 + eye.x} cy={cy + eye.y} r="4" fill="#1a1428" />
+      <circle cx={cx1 + eye.x + 1} cy={cy + eye.y - 1.4} r="1.5" fill="#fff" />
+      <circle cx={cx2 + eye.x + 1} cy={cy + eye.y - 1.4} r="1.5" fill="#fff" />
+      <rect x={cx1 - 7.5} y={cy - 7} width="15" height={lid} rx="6" fill={dark} style={{ transition: "height 90ms" }} />
+      <rect x={cx2 - 7.5} y={cy - 7} width="15" height={lid} rx="6" fill={dark} style={{ transition: "height 90ms" }} />
+    </g>
+  );
+}
 
-const PALETTES: Record<PetSpecies, {
-  light: string; mid: string; dark: string;
-  belly1: string; belly2: string;
-  accent: string;
-}> = {
-  deer:    { light: "#fde8c4", mid: "#e8b478", dark: "#b27a3f", belly1: "#fff5e0", belly2: "#fde2b8", accent: "#7a4a1a" },
-  fox:     { light: "#ffffff", mid: "#dbeeff", dark: "#7fa9d6", belly1: "#ffffff", belly2: "#eaf4ff", accent: "#34537a" },
-  rabbit:  { light: "#fbf3ff", mid: "#e8d5ff", dark: "#9a7fc4", belly1: "#ffffff", belly2: "#f2e6ff", accent: "#5a3f8a" },
-  panda:   { light: "#ffffff", mid: "#f1f1f1", dark: "#8a8a8a", belly1: "#ffffff", belly2: "#f6f6f6", accent: "#1a1a1a" },
-  phoenix: { light: "#ffe6c2", mid: "#ff9b6a", dark: "#c84a2a", belly1: "#fff0d6", belly2: "#ffd29a", accent: "#7a1f0a" },
-};
+function Particles({ count, t, palette, radius = 70, speed = 800 }: {
+  count: number; t: number; palette: typeof PALETTES[PetSpecies]; radius?: number; speed?: number;
+}) {
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => {
+        const a = t / speed + (i * Math.PI * 2) / count;
+        const r = radius + Math.sin(t / 500 + i) * 6;
+        const x = 100 + Math.cos(a) * r;
+        const y = 100 + Math.sin(a) * r * 0.7;
+        return (
+          <circle key={i} cx={x} cy={y} r={1.6 + (i % 2)} fill={palette.glow} opacity={0.85} />
+        );
+      })}
+    </>
+  );
+}
+
+function OrbitRing({ rx, ry, t, palette, opacity = 0.8, dash }: {
+  rx: number; ry: number; t: number; palette: typeof PALETTES[PetSpecies]; opacity?: number; dash?: string;
+}) {
+  return (
+    <ellipse
+      cx="100"
+      cy="100"
+      rx={rx}
+      ry={ry}
+      fill="none"
+      stroke={palette.glow}
+      strokeWidth="2"
+      strokeDasharray={dash}
+      opacity={opacity * (0.85 + Math.sin(t / 400) * 0.15)}
+      style={{ transformOrigin: "100px 100px", transform: `rotate(${(t / 40) % 360}deg)` }}
+    />
+  );
+}
 
 function renderSpecies(
   s: PetSpecies,
@@ -195,194 +229,300 @@ function renderSpecies(
   lid: number,
   mouthOpen: number,
   happy: boolean,
+  palette: typeof PALETTES[PetSpecies],
 ) {
-  const tail = (happy ? Math.sin(t / 90) * 22 : Math.sin(t / 280) * 10);
-  const earL = Math.sin(t / 700) * 4 - 4;
-  const earR = Math.sin(t / 700 + 1) * 4 + 4;
-  const palette = PALETTES[s];
-
-  // shared eye
-  const Eyes = (
-    <g>
-      <ellipse cx="84" cy="86" rx="7" ry="8" fill="#fff" />
-      <ellipse cx="116" cy="86" rx="7" ry="8" fill="#fff" />
-      <circle cx={84 + eye.x} cy={86 + eye.y} r="4" fill="#2a1a0a" />
-      <circle cx={116 + eye.x} cy={86 + eye.y} r="4" fill="#2a1a0a" />
-      <circle cx={85 + eye.x} cy={84.6 + eye.y} r="1.4" fill="#fff" />
-      <circle cx={117 + eye.x} cy={84.6 + eye.y} r="1.4" fill="#fff" />
-      {/* lids */}
-      <rect x="76.5" y={80} width="15" height={lid} rx="6" fill={palette.dark} style={{ transition: "height 90ms" }} />
-      <rect x="108.5" y={80} width="15" height={lid} rx="6" fill={palette.dark} style={{ transition: "height 90ms" }} />
-    </g>
-  );
-
-  // species-specific ears / horns / tail / wings
   switch (s) {
-    case "deer":
-      return (
-        <>
-          {/* tail */}
-          <g style={{ transformOrigin: "50px 130px", transform: `rotate(${tail}deg)` }}>
-            <ellipse cx="46" cy="128" rx="10" ry="7" fill={`url(#body-${s})`} />
-            <circle cx="40" cy="124" r="5" fill="#fff5e0" />
-          </g>
-          {/* body */}
-          <ellipse cx="100" cy="138" rx="46" ry="38" fill={`url(#body-${s})`} />
-          <ellipse cx="100" cy="148" rx="26" ry="22" fill={`url(#belly-${s})`} />
-          {/* legs */}
-          <ellipse cx="80" cy="174" rx="7" ry="9" fill={palette.dark} />
-          <ellipse cx="120" cy="174" rx="7" ry="9" fill={palette.dark} />
-          {/* head */}
-          <g style={{ transformOrigin: "100px 80px", transform: `rotate(${Math.sin(t / 1300) * 3}deg)` }}>
-            {/* ears */}
-            <g style={{ transformOrigin: "76px 50px", transform: `rotate(${earL}deg)` }}>
-              <ellipse cx="72" cy="44" rx="9" ry="17" fill={`url(#body-${s})`} />
-              <ellipse cx="72" cy="46" rx="4.5" ry="11" fill="#ffc7b5" />
-            </g>
-            <g style={{ transformOrigin: "124px 50px", transform: `rotate(${earR}deg)` }}>
-              <ellipse cx="128" cy="44" rx="9" ry="17" fill={`url(#body-${s})`} />
-              <ellipse cx="128" cy="46" rx="4.5" ry="11" fill="#ffc7b5" />
-            </g>
-            {/* antlers — bigger with stage */}
-            {stage >= 1 && (
-              <>
-                <path d={`M80 36 q-2 -${10 + stage * 4} -8 -${14 + stage * 5} M80 36 q-6 -6 -12 -6`} stroke={palette.accent} strokeWidth="2.5" fill="none" strokeLinecap="round" />
-                <path d={`M120 36 q2 -${10 + stage * 4} 8 -${14 + stage * 5} M120 36 q6 -6 12 -6`} stroke={palette.accent} strokeWidth="2.5" fill="none" strokeLinecap="round" />
-              </>
-            )}
-            <ellipse cx="100" cy="80" rx="44" ry="40" fill={`url(#body-${s})`} />
-            <circle cx="84" cy="64" r="3" fill="#fff5e0" opacity="0.8" />
-            <circle cx="118" cy="68" r="2.5" fill="#fff5e0" opacity="0.8" />
-            <circle cx="72" cy="92" r="9" fill="url(#cheek)" />
-            <circle cx="128" cy="92" r="9" fill="url(#cheek)" />
-            {Eyes}
-            <ellipse cx="100" cy="100" rx="4.5" ry="3.2" fill="#3a1f10" />
-            <path d={`M92 ${107 + mouthOpen} Q100 ${112 + mouthOpen * 1.6} 108 ${107 + mouthOpen}`} stroke="#3a1f10" strokeWidth="2" fill={mouthOpen > 1.2 ? "#a04848" : "none"} strokeLinecap="round" />
-          </g>
-        </>
-      );
-    case "fox":
-      return (
-        <>
-          <g style={{ transformOrigin: "46px 130px", transform: `rotate(${tail}deg)` }}>
-            <ellipse cx="40" cy="128" rx="14" ry="9" fill={`url(#body-${s})`} />
-            <ellipse cx="32" cy="126" rx="6" ry="6" fill="#fff" />
-          </g>
-          <ellipse cx="100" cy="138" rx="46" ry="38" fill={`url(#body-${s})`} />
-          <ellipse cx="100" cy="148" rx="26" ry="22" fill={`url(#belly-${s})`} />
-          <ellipse cx="80" cy="174" rx="7" ry="9" fill={palette.dark} />
-          <ellipse cx="120" cy="174" rx="7" ry="9" fill={palette.dark} />
-          <g style={{ transformOrigin: "100px 80px", transform: `rotate(${Math.sin(t / 1300) * 3}deg)` }}>
-            {/* pointy ears */}
-            <g style={{ transformOrigin: "76px 50px", transform: `rotate(${earL}deg)` }}>
-              <path d="M72 26 L60 56 L84 50 Z" fill={`url(#body-${s})`} />
-              <path d="M72 32 L66 52 L80 50 Z" fill="#ffc7b5" />
-            </g>
-            <g style={{ transformOrigin: "124px 50px", transform: `rotate(${earR}deg)` }}>
-              <path d="M128 26 L140 56 L116 50 Z" fill={`url(#body-${s})`} />
-              <path d="M128 32 L134 52 L120 50 Z" fill="#ffc7b5" />
-            </g>
-            <ellipse cx="100" cy="80" rx="44" ry="40" fill={`url(#body-${s})`} />
-            {/* fox marks */}
-            <path d="M70 90 q10 6 30 6 q20 0 30 -6 l-6 18 q-10 6 -24 6 q-14 0 -24 -6 z" fill="#ffffff" opacity="0.9" />
-            <circle cx="72" cy="92" r="9" fill="url(#cheek)" />
-            <circle cx="128" cy="92" r="9" fill="url(#cheek)" />
-            {Eyes}
-            <ellipse cx="100" cy="104" rx="4.5" ry="3.2" fill="#3a1f10" />
-            <path d={`M92 ${110 + mouthOpen} Q100 ${115 + mouthOpen * 1.6} 108 ${110 + mouthOpen}`} stroke="#3a1f10" strokeWidth="2" fill={mouthOpen > 1.2 ? "#a04848" : "none"} strokeLinecap="round" />
-            {stage >= 2 && (
-              <text x="100" y="50" textAnchor="middle" fontSize="14" fill={palette.dark} opacity="0.8">✦</text>
-            )}
-          </g>
-        </>
-      );
-    case "rabbit":
-      return (
-        <>
-          {/* fluffy tail */}
-          <circle cx="46" cy="130" r="9" fill="#fff" />
-          <ellipse cx="100" cy="142" rx="44" ry="36" fill={`url(#body-${s})`} />
-          <ellipse cx="100" cy="150" rx="24" ry="20" fill={`url(#belly-${s})`} />
-          <ellipse cx="82" cy="174" rx="7" ry="9" fill={palette.dark} />
-          <ellipse cx="118" cy="174" rx="7" ry="9" fill={palette.dark} />
-          <g style={{ transformOrigin: "100px 82px", transform: `rotate(${Math.sin(t / 1300) * 3}deg)` }}>
-            {/* long ears */}
-            <g style={{ transformOrigin: "82px 56px", transform: `rotate(${earL - 4}deg)` }}>
-              <ellipse cx="80" cy={28 + stage * 2} rx="8" ry={28 + stage * 4} fill={`url(#body-${s})`} />
-              <ellipse cx="80" cy={28 + stage * 2} rx="3.5" ry={20 + stage * 3} fill="#ffc7e5" />
-            </g>
-            <g style={{ transformOrigin: "118px 56px", transform: `rotate(${earR + 4}deg)` }}>
-              <ellipse cx="120" cy={28 + stage * 2} rx="8" ry={28 + stage * 4} fill={`url(#body-${s})`} />
-              <ellipse cx="120" cy={28 + stage * 2} rx="3.5" ry={20 + stage * 3} fill="#ffc7e5" />
-            </g>
-            <ellipse cx="100" cy="86" rx="42" ry="38" fill={`url(#body-${s})`} />
-            <circle cx="74" cy="98" r="9" fill="url(#cheek)" />
-            <circle cx="126" cy="98" r="9" fill="url(#cheek)" />
-            {Eyes}
-            <path d="M96 100 q4 4 8 0" stroke="#3a1f10" strokeWidth="2" fill="#ffb6c1" />
-            <path d={`M92 ${112 + mouthOpen} Q100 ${118 + mouthOpen * 1.6} 108 ${112 + mouthOpen}`} stroke="#3a1f10" strokeWidth="2" fill={mouthOpen > 1.2 ? "#a04848" : "none"} strokeLinecap="round" />
-          </g>
-        </>
-      );
-    case "panda":
-      return (
-        <>
-          <ellipse cx="100" cy="138" rx="50" ry="40" fill="#ffffff" />
-          <ellipse cx="100" cy="148" rx="28" ry="22" fill="#f6f6f6" />
-          <ellipse cx="74" cy="172" rx="9" ry="11" fill="#1a1a1a" />
-          <ellipse cx="126" cy="172" rx="9" ry="11" fill="#1a1a1a" />
-          {/* arms */}
-          <ellipse cx="58" cy="138" rx="11" ry="14" fill="#1a1a1a" />
-          <ellipse cx="142" cy="138" rx="11" ry="14" fill="#1a1a1a" />
-          <g style={{ transformOrigin: "100px 80px", transform: `rotate(${Math.sin(t / 1300) * 3}deg)` }}>
-            {/* round ears */}
-            <circle cx="68" cy="44" r="14" fill="#1a1a1a" />
-            <circle cx="132" cy="44" r="14" fill="#1a1a1a" />
-            <ellipse cx="100" cy="80" rx="46" ry="40" fill="#ffffff" />
-            {/* eye patches */}
-            <ellipse cx="84" cy="86" rx="11" ry="14" fill="#1a1a1a" transform="rotate(-15 84 86)" />
-            <ellipse cx="116" cy="86" rx="11" ry="14" fill="#1a1a1a" transform="rotate(15 116 86)" />
-            {Eyes}
-            <ellipse cx="100" cy="104" rx="5" ry="3.5" fill="#1a1a1a" />
-            <path d={`M92 ${112 + mouthOpen} Q100 ${118 + mouthOpen * 1.6} 108 ${112 + mouthOpen}`} stroke="#1a1a1a" strokeWidth="2" fill={mouthOpen > 1.2 ? "#a04848" : "none"} strokeLinecap="round" />
-          </g>
-          {stage >= 1 && (
-            <g style={{ transform: `rotate(${Math.sin(t / 600) * 6}deg)`, transformOrigin: "150px 130px" }}>
-              <path d="M148 142 L154 110 L162 116 L156 144 Z" fill="#7fb069" />
-              <path d="M152 130 L158 124" stroke="#3f6a3f" strokeWidth="1.2" />
-            </g>
-          )}
-        </>
-      );
-    case "phoenix":
-      return (
-        <>
-          {/* wings — flap with stage */}
-          <g style={{ transformOrigin: "70px 130px", transform: `rotate(${Math.sin(t / (happy ? 140 : 350)) * (10 + stage * 4)}deg)` }}>
-            <path d="M70 130 q-40 -10 -50 20 q30 6 56 -8 z" fill={`url(#body-${s})`} />
-          </g>
-          <g style={{ transformOrigin: "130px 130px", transform: `rotate(${-Math.sin(t / (happy ? 140 : 350)) * (10 + stage * 4)}deg)` }}>
-            <path d="M130 130 q40 -10 50 20 q-30 6 -56 -8 z" fill={`url(#body-${s})`} />
-          </g>
-          <ellipse cx="100" cy="138" rx="40" ry="34" fill={`url(#body-${s})`} />
-          <ellipse cx="100" cy="148" rx="22" ry="18" fill={`url(#belly-${s})`} />
-          {/* tail feathers */}
-          <g style={{ transformOrigin: "100px 170px", transform: `rotate(${Math.sin(t / 400) * 6}deg)` }}>
-            <path d="M88 170 q-6 16 -2 24" stroke="#ff6a3a" strokeWidth="4" fill="none" strokeLinecap="round" />
-            <path d="M100 172 q0 18 4 26" stroke="#ffaa3a" strokeWidth="4" fill="none" strokeLinecap="round" />
-            <path d="M112 170 q6 16 10 22" stroke="#ff6a3a" strokeWidth="4" fill="none" strokeLinecap="round" />
-          </g>
-          <g style={{ transformOrigin: "100px 80px", transform: `rotate(${Math.sin(t / 1300) * 3}deg)` }}>
-            {/* crown feathers */}
-            <path d={`M86 36 q4 -${14 + stage * 4} 14 -${18 + stage * 4} q10 4 14 ${18 + stage * 4}`} stroke="#ff6a3a" strokeWidth="3" fill="none" strokeLinecap="round" />
-            <ellipse cx="100" cy="80" rx="40" ry="38" fill={`url(#body-${s})`} />
-            <circle cx="74" cy="92" r="8" fill="url(#cheek)" />
-            <circle cx="126" cy="92" r="8" fill="url(#cheek)" />
-            {Eyes}
-            {/* beak */}
-            <path d={`M94 100 L100 ${108 + mouthOpen} L106 100 Z`} fill="#e8a23a" />
-          </g>
-        </>
-      );
+    case "baopao":     return renderBaopao(stage, t, eye, lid, mouthOpen, palette);
+    case "shantuan":   return renderShantuan(stage, t, eye, lid, mouthOpen, palette, happy);
+    case "senmian":    return renderSenmian(stage, t, eye, lid, mouthOpen, palette);
+    case "yexing":     return renderYexing(stage, t, eye, lid, mouthOpen, palette);
+    case "xingan":     return renderXingan(stage, t, eye, lid, mouthOpen, palette);
+    default:           return renderBaopao(stage, t, eye, lid, mouthOpen, palette);
   }
+}
+
+/* ============ 宝泡啾 — 贪欲克服系 (cream-gold crystal orb with belly storage) ============ */
+function renderBaopao(stage: PetStage, t: number, eye: { x: number; y: number }, lid: number, mouthOpen: number, palette: typeof PALETTES["baopao"]) {
+  const coreGlow = 0.4 + stage * 0.1 + Math.sin(t / 400) * 0.1;
+  return (
+    <>
+      {stage >= 4 && <OrbitRing rx={70} ry={22} t={t} palette={palette} />}
+      {stage >= 5 && <OrbitRing rx={80} ry={28} t={-t} palette={palette} dash="4 6" />}
+      {stage >= 3 && <Particles count={6 + stage} t={t} palette={palette} radius={62 + stage * 2} />}
+
+      {/* coin-melt ears at stage 2+ */}
+      {stage >= 2 && (
+        <>
+          <path d="M62 60 q-10 -8 -8 -22 q12 4 14 18 z" fill={palette.mid} opacity="0.85" />
+          <path d="M138 60 q10 -8 8 -22 q-12 4 -14 18 z" fill={palette.mid} opacity="0.85" />
+        </>
+      )}
+
+      {/* main floating body — round droplet */}
+      <ellipse cx="100" cy="105" rx={42 + stage * 1.2} ry={46 + stage * 1.5} fill={`url(#body-baopao)`} />
+      {/* crystal highlight */}
+      <ellipse cx="86" cy="80" rx="14" ry="22" fill="#ffffff" opacity="0.35" />
+
+      {/* belly storage core — glows brighter with stage */}
+      <circle cx="100" cy="118" r={14 + stage * 1.5} fill={`url(#core-baopao)`} opacity={coreGlow + 0.3} />
+      {stage >= 1 && (
+        <>
+          {[0,1,2,3].map((i) => {
+            const a = t / 600 + i * 1.6;
+            return <circle key={i} cx={100 + Math.cos(a) * (5 + stage)} cy={118 + Math.sin(a) * (5 + stage)} r="1.4" fill="#fff" opacity="0.9" />;
+          })}
+        </>
+      )}
+
+      {/* halo above — stages 3+ */}
+      {stage >= 3 && (
+        <ellipse cx="100" cy="50" rx={20 + stage * 2} ry="4" fill="none" stroke={palette.glow} strokeWidth="2" opacity={0.6 + Math.sin(t / 400) * 0.2} />
+      )}
+
+      {/* face */}
+      <Eyes cx1={86} cx2={114} cy={92} eye={eye} lid={lid} dark={palette.dark} />
+      <circle cx="74" cy="100" r="6" fill="url(#cheek-soft)" />
+      <circle cx="126" cy="100" r="6" fill="url(#cheek-soft)" />
+      <path d={`M93 ${102 + mouthOpen} Q100 ${107 + mouthOpen * 1.6} 107 ${102 + mouthOpen}`} stroke={palette.dark} strokeWidth="2" fill="none" strokeLinecap="round" />
+
+      {/* transcendence stage 6: dissolve into pure light */}
+      {stage >= 6 && (
+        <>
+          <circle cx="100" cy="105" r="55" fill={palette.glow} opacity="0.18" />
+          <circle cx="100" cy="105" r="35" fill="#ffffff" opacity="0.25" />
+        </>
+      )}
+    </>
+  );
+}
+
+/* ============ 闪团丸 — 懒惰克服系 (sky-blue lightning ball with thrusters) ============ */
+function renderShantuan(stage: PetStage, t: number, eye: { x: number; y: number }, lid: number, mouthOpen: number, palette: typeof PALETTES["shantuan"], happy: boolean) {
+  const dash = (t / (happy ? 80 : 200)) % 20;
+  return (
+    <>
+      {stage >= 4 && <OrbitRing rx={75} ry={20} t={t * 1.5} palette={palette} dash="2 5" />}
+      {stage >= 5 && (
+        <>
+          {/* energy wings */}
+          <path d="M40 110 q-20 -10 -28 4 q14 12 32 4 z" fill={palette.glow} opacity="0.6" />
+          <path d="M160 110 q20 -10 28 4 q-14 12 -32 4 z" fill={palette.glow} opacity="0.6" />
+        </>
+      )}
+
+      {/* speed lines below — stage 1+ */}
+      {stage >= 1 && (
+        <g opacity={0.5 + stage * 0.06}>
+          {[0,1,2,3,4].map((i) => (
+            <line key={i} x1={70 + i * 15} y1={170} x2={60 + i * 15 + (dash * 0.5)} y2={170} stroke={palette.glow} strokeWidth="1.5" strokeLinecap="round" />
+          ))}
+        </g>
+      )}
+
+      {/* thruster flames — stage 3+ */}
+      {stage >= 3 && (
+        <>
+          <path d="M80 150 q-4 16 0 22 q4 -6 4 -22 z" fill={palette.glow} opacity="0.85" />
+          <path d="M120 150 q4 16 0 22 q-4 -6 -4 -22 z" fill={palette.glow} opacity="0.85" />
+        </>
+      )}
+
+      {/* main round body */}
+      <circle cx="100" cy="105" r={40 + stage * 1.2} fill={`url(#body-shantuan)`} />
+      <ellipse cx="86" cy="82" rx="12" ry="18" fill="#ffffff" opacity="0.4" />
+
+      {/* lightning antenna on top */}
+      <path d={`M100 ${65 - stage * 2} L96 50 L102 50 L98 ${42 - stage * 3}`} stroke={palette.core} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+      <circle cx={98} cy={42 - stage * 3} r={3 + stage * 0.4} fill={palette.core} opacity={0.8 + Math.sin(t/200)*0.2} />
+
+      {/* lightning trails — stage 4+ */}
+      {stage >= 4 && (
+        <g opacity="0.85">
+          {[0,1,2].map((i) => {
+            const a = t / 300 + i * 2.1;
+            return <path key={i} d={`M${100 + Math.cos(a)*55} ${100 + Math.sin(a)*45} l3 -4 l-2 0 l3 -5`} stroke={palette.core} strokeWidth="1.5" fill="none" strokeLinecap="round" />;
+          })}
+        </g>
+      )}
+
+      {/* crown of thunder — stage 5+ */}
+      {stage >= 5 && (
+        <path d={`M76 56 L84 40 L92 56 L100 36 L108 56 L116 40 L124 56`} stroke={palette.core} strokeWidth="2" fill="none" strokeLinejoin="round" opacity="0.9" />
+      )}
+
+      <Eyes cx1={88} cx2={112} cy={100} eye={eye} lid={lid} dark={palette.dark} />
+      <path d={`M93 ${112 + mouthOpen} Q100 ${117 + mouthOpen * 1.6} 107 ${112 + mouthOpen}`} stroke={palette.dark} strokeWidth="2" fill="none" strokeLinecap="round" />
+
+      {stage >= 6 && (
+        <>
+          <circle cx="100" cy="100" r="60" fill={palette.core} opacity="0.18" />
+          <path d="M70 100 L90 70 L88 100 L110 60 L106 102 L130 80" stroke={palette.core} strokeWidth="3" fill="none" opacity="0.6" />
+        </>
+      )}
+    </>
+  );
+}
+
+/* ============ 森眠灵 — 暴躁克服系 (mint forest sprite, vines + heart core) ============ */
+function renderSenmian(stage: PetStage, t: number, eye: { x: number; y: number }, lid: number, mouthOpen: number, palette: typeof PALETTES["senmian"]) {
+  return (
+    <>
+      {stage >= 4 && <OrbitRing rx={72} ry={22} t={t * 0.6} palette={palette} dash="6 4" />}
+      {stage >= 3 && <Particles count={5 + stage} t={t} palette={palette} radius={64} speed={1100} />}
+
+      {/* leaf wings — stage 4+ */}
+      {stage >= 4 && (
+        <>
+          <path d="M44 110 q-22 -8 -28 6 q12 14 30 4 z" fill={palette.mid} opacity="0.8" />
+          <path d="M156 110 q22 -8 28 6 q-12 14 -30 4 z" fill={palette.mid} opacity="0.8" />
+        </>
+      )}
+
+      {/* fluffy marshmallow body */}
+      <ellipse cx="100" cy="115" rx={44 + stage * 1.2} ry={42 + stage * 1.2} fill={`url(#body-senmian)`} />
+      <ellipse cx="86" cy="92" rx="14" ry="20" fill="#ffffff" opacity="0.45" />
+
+      {/* heart core held to chest */}
+      <g style={{ transform: `translateY(${Math.sin(t/500)*1.5}px)`, transformOrigin: "100px 122px" }}>
+        <path
+          d="M100 132 C 90 120, 78 124, 86 110 C 92 100, 100 110, 100 110 C 100 110, 108 100, 114 110 C 122 124, 110 120, 100 132 Z"
+          fill={palette.core}
+          opacity={0.85 + Math.sin(t/350)*0.15}
+        />
+      </g>
+
+      {/* vine sprouts on head */}
+      <g style={{ transformOrigin: "100px 70px", transform: `rotate(${Math.sin(t/900)*5}deg)` }}>
+        <path d={`M92 70 q-4 -${10 + stage * 3} -10 -${14 + stage * 3}`} stroke={palette.dark} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+        <path d={`M108 70 q4 -${10 + stage * 3} 10 -${14 + stage * 3}`} stroke={palette.dark} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+        {stage >= 1 && (
+          <>
+            <ellipse cx={82 - stage} cy={56 - stage * 3} rx="5" ry="8" fill={palette.mid} transform={`rotate(-30 ${82 - stage} ${56 - stage * 3})`} />
+            <ellipse cx={118 + stage} cy={56 - stage * 3} rx="5" ry="8" fill={palette.mid} transform={`rotate(30 ${118 + stage} ${56 - stage * 3})`} />
+          </>
+        )}
+      </g>
+
+      {/* vine crown halo — stage 5+ */}
+      {stage >= 5 && (
+        <path d="M70 50 q30 -22 60 0" stroke={palette.dark} strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.8" />
+      )}
+
+      <Eyes cx1={86} cx2={114} cy={100} eye={eye} lid={lid} dark={palette.dark} />
+      <circle cx="74" cy="108" r="6" fill="url(#cheek-soft)" />
+      <circle cx="126" cy="108" r="6" fill="url(#cheek-soft)" />
+      <path d={`M93 ${112 + mouthOpen} Q100 ${116 + mouthOpen * 1.6} 107 ${112 + mouthOpen}`} stroke={palette.dark} strokeWidth="2" fill="none" strokeLinecap="round" />
+
+      {stage >= 6 && (
+        <circle cx="100" cy="115" r="55" fill={palette.mid} opacity="0.2" />
+      )}
+    </>
+  );
+}
+
+/* ============ 夜星诺 — 诱惑克服系 (deep purple star-demon with cape) ============ */
+function renderYexing(stage: PetStage, t: number, eye: { x: number; y: number }, lid: number, mouthOpen: number, palette: typeof PALETTES["yexing"]) {
+  return (
+    <>
+      {stage >= 4 && <OrbitRing rx={78} ry={24} t={t} palette={palette} />}
+      {stage >= 5 && <OrbitRing rx={88} ry={32} t={-t * 0.7} palette={palette} dash="3 7" />}
+      {stage >= 2 && <Particles count={5 + stage} t={t} palette={palette} radius={60 + stage * 2} speed={900} />}
+
+      {/* star cape behind body */}
+      {stage >= 3 && (
+        <path d={`M60 100 q-${10 + stage * 4} ${30 + stage * 4} 10 ${50 + stage * 3} q30 -10 60 0 q${20 + stage * 4} -${20 + stage * 4} ${10 + stage * 4} -${50 + stage * 3} z`}
+          fill={palette.dark} opacity={0.3 + stage * 0.05}
+        />
+      )}
+
+      {/* main body */}
+      <ellipse cx="100" cy="110" rx={38 + stage * 1.2} ry={42 + stage * 1.2} fill={`url(#body-yexing)`} />
+      <ellipse cx="86" cy="86" rx="12" ry="18" fill="#ffffff" opacity="0.3" />
+
+      {/* moon horns */}
+      <path d={`M76 60 q-${4 + stage} -${8 + stage * 2} 4 -${14 + stage * 2} q4 6 2 ${12 + stage}`} fill={palette.core} opacity="0.95" />
+      <path d={`M124 60 q${4 + stage} -${8 + stage * 2} -4 -${14 + stage * 2} q-4 6 -2 ${12 + stage}`} fill={palette.core} opacity="0.95" />
+
+      {/* moon halo crown — stage 5+ */}
+      {stage >= 5 && (
+        <ellipse cx="100" cy="48" rx={24 + stage * 1.5} ry="5" fill="none" stroke={palette.core} strokeWidth="2" opacity="0.85" />
+      )}
+
+      {/* star tail / silver tail — stage 2+ */}
+      {stage >= 2 && (
+        <g style={{ transformOrigin: "60px 140px", transform: `rotate(${Math.sin(t/700)*8}deg)` }}>
+          <path d={`M58 140 q-${10 + stage * 3} ${10 + stage * 2} -${4 + stage} ${22 + stage * 3}`} stroke={palette.core} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+          <path d="M52 162 L54 158 L58 160 L55 163 L57 167 L52 165 L48 168 L50 163 Z" fill={palette.core} opacity="0.95" />
+        </g>
+      )}
+
+      <Eyes cx1={86} cx2={114} cy={96} eye={eye} lid={lid} dark={palette.dark} />
+      <path d={`M93 ${108 + mouthOpen} Q100 ${112 + mouthOpen * 1.6} 107 ${108 + mouthOpen}`} stroke={palette.core} strokeWidth="2" fill="none" strokeLinecap="round" />
+
+      {stage >= 6 && (
+        <>
+          <circle cx="100" cy="110" r="58" fill={palette.dark} opacity="0.25" />
+          <circle cx="100" cy="110" r="14" fill={palette.core} opacity="0.7" />
+        </>
+      )}
+    </>
+  );
+}
+
+/* ============ 星安丸 — 焦虑克服系 (pale blue star jelly with calm core) ============ */
+function renderXingan(stage: PetStage, t: number, eye: { x: number; y: number }, lid: number, mouthOpen: number, palette: typeof PALETTES["xingan"]) {
+  return (
+    <>
+      {stage >= 4 && <OrbitRing rx={72} ry={22} t={t} palette={palette} />}
+      {stage >= 4 && <OrbitRing rx={84} ry={28} t={-t * 0.8} palette={palette} dash="2 6" />}
+      {stage >= 3 && <Particles count={6 + stage} t={t} palette={palette} radius={64} />}
+
+      {/* cloud antennae on head */}
+      <g>
+        <circle cx={84 - stage} cy={62 - stage * 2} r={5 + stage * 0.5} fill={palette.mid} opacity="0.85" />
+        <circle cx={116 + stage} cy={62 - stage * 2} r={5 + stage * 0.5} fill={palette.mid} opacity="0.85" />
+      </g>
+
+      {/* nebula cape — stage 5+ */}
+      {stage >= 5 && (
+        <ellipse cx="100" cy="130" rx={62 + stage * 2} ry={28} fill={palette.mid} opacity="0.3" />
+      )}
+
+      {/* main soft body — gently rounded */}
+      <path
+        d={`M${60 - stage} 110 Q60 ${60 - stage * 2} 100 ${60 - stage * 2} Q${140 + stage} ${60 - stage * 2} ${140 + stage} 110 Q${140 + stage} ${160 + stage} 100 ${160 + stage} Q${60 - stage} ${160 + stage} ${60 - stage} 110 Z`}
+        fill={`url(#body-xingan)`}
+      />
+      <ellipse cx="86" cy="84" rx="12" ry="18" fill="#ffffff" opacity="0.5" />
+
+      {/* calm star core on chest */}
+      <g style={{ transformOrigin: "100px 122px", transform: `rotate(${(t/100)%360}deg)` }}>
+        <path
+          d="M100 110 L104 119 L113 120 L106 126 L108 135 L100 130 L92 135 L94 126 L87 120 L96 119 Z"
+          fill={palette.core}
+          opacity={0.85 + Math.sin(t/400)*0.15}
+        />
+      </g>
+
+      {/* star ribbon tail — stage 2+ */}
+      {stage >= 2 && (
+        <g style={{ transformOrigin: "100px 160px", transform: `rotate(${Math.sin(t/800)*6}deg)` }}>
+          <path d={`M90 160 q-${4 + stage} ${10 + stage * 2} 0 ${20 + stage * 2}`} stroke={palette.mid} strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path d={`M110 160 q${4 + stage} ${10 + stage * 2} 0 ${20 + stage * 2}`} stroke={palette.mid} strokeWidth="2" fill="none" strokeLinecap="round" />
+        </g>
+      )}
+
+      <Eyes cx1={86} cx2={114} cy={92} eye={eye} lid={lid} dark={palette.dark} />
+      <circle cx="74" cy="100" r="6" fill="url(#cheek-soft)" />
+      <circle cx="126" cy="100" r="6" fill="url(#cheek-soft)" />
+      <path d={`M93 ${104 + mouthOpen} Q100 ${108 + mouthOpen * 1.6} 107 ${104 + mouthOpen}`} stroke={palette.dark} strokeWidth="2" fill="none" strokeLinecap="round" />
+
+      {stage >= 6 && (
+        <>
+          <circle cx="100" cy="110" r="58" fill={palette.mid} opacity="0.22" />
+          <circle cx="100" cy="122" r="10" fill={palette.core} opacity="0.85" />
+        </>
+      )}
+    </>
+  );
 }
