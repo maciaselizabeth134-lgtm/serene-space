@@ -10,7 +10,7 @@ export const Route = createFileRoute("/community")({
   head: () => ({
     meta: [
       { title: "心得社区 — 清心" },
-      { name: "description", content: "分享戒色心得,互相鼓励,共同成长。" },
+      { name: "description", content: "分享心得,互相鼓励,共同成长。" },
     ],
   }),
   component: CommunityPage,

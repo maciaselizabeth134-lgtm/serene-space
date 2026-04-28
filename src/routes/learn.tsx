@@ -7,7 +7,7 @@ export const Route = createFileRoute("/learn")({
   head: () => ({
     meta: [
       { title: "学习资料 — 清心" },
-      { name: "description", content: "戒色理念、方法、心法,系统了解戒色之道。" },
+      { name: "description", content: "自律理念、方法、心法,系统了解自律之道。" },
     ],
   }),
   component: LearnPage,
