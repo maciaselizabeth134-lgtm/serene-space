@@ -222,7 +222,7 @@ function CheckinCalendar({ checkins, startDate }: { checkins: Checkin[]; startDa
         checked: "bg-primary/15 text-primary font-semibold rounded-full",
         started: "ring-2 ring-primary/60 rounded-full",
       }}
-      className={cn("p-0 pointer-events-auto w-full [--cell-size:2.6rem]")}
+      className={cn("p-0 pointer-events-auto w-full [--cell-size:2.1rem]")}
       classNames={{
         root: "w-full",
         months: "flex flex-col gap-4 w-full",
