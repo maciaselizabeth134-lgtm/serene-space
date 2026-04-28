@@ -279,10 +279,9 @@ function PetHome({
   onReset: () => void;
 }) {
   const stage = stageFromDays(days);
-  const thresholds = [0, 7, 30, 100];
-  const next = thresholds[Math.min(3, stage + 1)];
-  const cur = thresholds[stage];
-  const progress = stage >= 3 ? 1 : Math.min(1, (days - cur) / Math.max(1, next - cur));
+  const cur = currentStageThreshold(stage);
+  const next = nextStageThreshold(stage);
+  const progress = stage >= 6 ? 1 : Math.min(1, (days - cur) / Math.max(1, next - cur));
   const meta = PET_CATALOG.find((p) => p.id === pet.pet_type)!;
 
   const satiety = state?.satiety ?? 0;
@@ -380,7 +379,7 @@ function PetHome({
         <div className="mt-5">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>已陪伴 {days} 天</span>
-            <span>{stage >= 3 ? "已圆满 ✦" : `下一阶段 ${next} 天`}</span>
+            <span>{stage >= 6 ? "已超越 ✦" : `下一阶段 ${next} 天`}</span>
           </div>
           <div className="mt-2 h-2 w-full rounded-full bg-muted overflow-hidden">
             <div
@@ -388,10 +387,10 @@ function PetHome({
               style={{ width: `${Math.round(progress * 100)}%` }}
             />
           </div>
-          <div className="mt-3 grid grid-cols-4 gap-1.5">
-            {[0,1,2,3].map((i) => (
+          <div className="mt-3 grid grid-cols-7 gap-1">
+            {[0,1,2,3,4,5,6].map((i) => (
               <div key={i} className={cn(
-                "rounded-lg border px-1.5 py-1 text-center text-[10px]",
+                "rounded-md border px-1 py-1 text-center text-[9px] leading-tight",
                 i <= stage ? "border-primary/40 bg-primary/10 text-primary" : "border-border/60 text-muted-foreground"
               )}>{STAGE_LABELS[i]}</div>
             ))}
