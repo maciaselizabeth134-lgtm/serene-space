@@ -1,11 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState, FormEvent } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, useState, FormEvent } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MessageCircle, Heart, Plus, Sparkles } from "lucide-react";
-import { PET_CATALOG, PetCreature, STAGE_LABELS, stageFromDays, type PetSpecies, type PetStage } from "@/components/PetCreature";
+import { PET_CATALOG, STAGE_LABELS, stageFromDays, type PetSpecies, type PetStage } from "@/components/PetCreature";
+import { UserAvatar } from "@/components/UserAvatar";
 
 export const Route = createFileRoute("/community")({
   head: () => ({
@@ -54,10 +55,13 @@ function computeDays(start: string | null): number {
 
 function CommunityPage() {
   const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState<string>("all");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -125,6 +129,46 @@ function CommunityPage() {
     if (!authLoading) load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter, authLoading, user?.id]);
+
+  const onAvatarClick = (postUserId: string) => {
+    if (!user) {
+      navigate({ to: "/auth" });
+      return;
+    }
+    if (postUserId === user.id) {
+      fileInputRef.current?.click();
+    } else {
+      // Other users' avatars are non-interactive; could navigate to their profile in the future.
+      toast.info("这是 ta 的头像 ✨");
+    }
+  };
+
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) return toast.error("请选择图片文件");
+    if (file.size > 5 * 1024 * 1024) return toast.error("图片不能超过 5MB");
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { cacheControl: "3600", upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+      const url = pub.publicUrl;
+      const { error: updErr } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+      if (updErr) throw updErr;
+      toast.success("头像已更新");
+      load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "上传失败");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const toggleLike = async (post: Post) => {
     if (!user) {
@@ -203,20 +247,14 @@ function CommunityPage() {
                 className="rounded-3xl border border-border/60 bg-card p-6 shadow-soft transition-smooth hover:-translate-y-0.5"
               >
                 <div className="flex items-center gap-3">
-                  <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5">
-                    {post.author_pet ? (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <PetCreature
-                          species={post.author_pet.pet_type}
-                          stage={(post.author_stage ?? 0) as PetStage}
-                          size={56}
-                          state="idle"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-lg">🌱</div>
-                    )}
-                  </div>
+                  <UserAvatar
+                    avatarUrl={post.profiles?.avatar_url ?? null}
+                    username={post.profiles?.username ?? null}
+                    petSpecies={post.author_pet?.pet_type ?? null}
+                    petStage={post.author_stage ?? null}
+                    size={52}
+                    onClick={() => onAvatarClick(post.user_id)}
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5 text-sm">
                       <span className="font-medium text-foreground truncate">{post.profiles?.username ?? "匿名同行"}</span>
@@ -259,6 +297,14 @@ function CommunityPage() {
             ))
           )}
         </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={onFileChange}
+          disabled={uploadingAvatar}
+        />
       </div>
     </AppShell>
   );
