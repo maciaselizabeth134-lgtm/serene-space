@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactElement } from "react";
 
 export type PetSpecies = "baopao" | "shantuan" | "senmian" | "yexing" | "xingan";
 export type PetStage = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -161,9 +161,71 @@ export function PetCreature({
         {/* floating shadow */}
         <ellipse cx="100" cy="180" rx={36 - stage * 1.5} ry="5" fill="#000" opacity="0.16" />
 
+        {/* final-form silhouette — a faint ghost of the ultimate stage hovering behind */}
+        {stage < 6 && <FinalFormShadow species={species} t={t} palette={palette} stage={stage} />}
+
         {renderSpecies(species, stage, t, eye, lid, mouthOpen, happy, palette)}
       </svg>
     </div>
+  );
+}
+
+/* Faint silhouette of the Lv7 (超越态) form, drifting behind the current pet.
+   Opacity grows slightly with stage — barely visible early, more present as the pet matures. */
+function FinalFormShadow({
+  species, t, palette, stage,
+}: { species: PetSpecies; t: number; palette: typeof PALETTES[PetSpecies]; stage: PetStage }) {
+  const baseOpacity = 0.06 + stage * 0.025;
+  const pulse = 0.85 + Math.sin(t / 900) * 0.15;
+  const drift = Math.sin(t / 1400) * 3;
+
+  // Each species' final form is a simplified, ethereal silhouette
+  const silhouettes: Record<PetSpecies, ReactElement> = {
+    baopao: (
+      <g>
+        <circle cx="100" cy="100" r="62" fill={palette.glow} />
+        <circle cx="100" cy="100" r="42" fill={palette.core} opacity="0.6" />
+        <circle cx="100" cy="100" r="18" fill="#ffffff" opacity="0.8" />
+      </g>
+    ),
+    shantuan: (
+      <g>
+        <circle cx="100" cy="100" r="60" fill={palette.glow} />
+        <path d="M82 70 L96 95 L86 98 L104 130 L96 102 L110 100 Z" fill={palette.core} opacity="0.85" />
+      </g>
+    ),
+    senmian: (
+      <g>
+        <ellipse cx="100" cy="105" rx="60" ry="58" fill={palette.mid} />
+        <path d="M100 130 C 84 114, 70 118, 80 100 C 88 88, 100 100, 100 100 C 100 100, 112 88, 120 100 C 130 118, 116 114, 100 130 Z" fill={palette.core} opacity="0.7" />
+      </g>
+    ),
+    yexing: (
+      <g>
+        <circle cx="100" cy="100" r="62" fill={palette.dark} />
+        <path d="M100 70 L106 92 L128 92 L110 106 L116 128 L100 114 L84 128 L90 106 L72 92 L94 92 Z" fill={palette.core} opacity="0.85" />
+      </g>
+    ),
+    xingan: (
+      <g>
+        <circle cx="100" cy="105" r="60" fill={palette.mid} />
+        <path d="M100 78 L106 96 L124 98 L110 110 L114 128 L100 118 L86 128 L90 110 L76 98 L94 96 Z" fill={palette.core} opacity="0.75" />
+      </g>
+    ),
+  };
+
+  return (
+    <g
+      style={{
+        opacity: baseOpacity * pulse,
+        transform: `translate(${drift}px, ${-6 + drift * 0.3}px) scale(1.18)`,
+        transformOrigin: "100px 100px",
+        filter: "blur(6px)",
+        pointerEvents: "none",
+      }}
+    >
+      {silhouettes[species]}
+    </g>
   );
 }
 
