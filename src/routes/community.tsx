@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MessageCircle, Heart, Plus, Sparkles } from "lucide-react";
+import { PET_CATALOG, PetCreature, STAGE_LABELS, stageFromDays, type PetSpecies, type PetStage } from "@/components/PetCreature";
 
 export const Route = createFileRoute("/community")({
   head: () => ({
@@ -24,6 +25,9 @@ type Post = {
   category: string;
   created_at: string;
   profiles?: { username: string; avatar_url: string | null } | null;
+  author_days?: number;
+  author_stage?: PetStage;
+  author_pet?: { pet_type: PetSpecies; nickname: string } | null;
   likes_count?: number;
   comments_count?: number;
   liked?: boolean;
@@ -63,31 +67,48 @@ function CommunityPage() {
     }
     const ids = (data ?? []).map((p) => p.id);
     const userIds = Array.from(new Set((data ?? []).map((p) => p.user_id)));
-    const [likesRes, commentsRes, myLikesRes, profilesRes] = await Promise.all([
+    const [likesRes, commentsRes, myLikesRes, profilesRes, petsRes] = await Promise.all([
       supabase.from("likes").select("post_id").in("post_id", ids),
       supabase.from("comments").select("post_id").in("post_id", ids),
       user
         ? supabase.from("likes").select("post_id").in("post_id", ids).eq("user_id", user.id)
         : Promise.resolve({ data: [] as { post_id: string }[] }),
       userIds.length
-        ? supabase.from("profiles").select("id, username, avatar_url").in("id", userIds)
-        : Promise.resolve({ data: [] as { id: string; username: string; avatar_url: string | null }[] }),
+        ? supabase.from("profiles").select("id, username, avatar_url, quit_start_date").in("id", userIds)
+        : Promise.resolve({ data: [] as { id: string; username: string; avatar_url: string | null; quit_start_date: string | null }[] }),
+      userIds.length
+        ? supabase.from("user_pets").select("user_id, pet_type, nickname").in("user_id", userIds)
+        : Promise.resolve({ data: [] as { user_id: string; pet_type: string; nickname: string }[] }),
     ]);
-    const profileMap = new Map<string, { username: string; avatar_url: string | null }>();
-    (profilesRes.data ?? []).forEach((p) => profileMap.set(p.id, { username: p.username, avatar_url: p.avatar_url }));
+    const profileMap = new Map<string, { username: string; avatar_url: string | null; quit_start_date: string | null }>();
+    (profilesRes.data ?? []).forEach((p) => profileMap.set(p.id, { username: p.username, avatar_url: p.avatar_url, quit_start_date: p.quit_start_date }));
+    const validSpecies = new Set(PET_CATALOG.map((p) => p.id));
+    const petMap = new Map<string, { pet_type: PetSpecies; nickname: string }>();
+    (petsRes.data ?? []).forEach((p) => {
+      if (validSpecies.has(p.pet_type as PetSpecies)) {
+        petMap.set(p.user_id, { pet_type: p.pet_type as PetSpecies, nickname: p.nickname });
+      }
+    });
     const likeMap = new Map<string, number>();
     (likesRes.data ?? []).forEach((l) => likeMap.set(l.post_id, (likeMap.get(l.post_id) ?? 0) + 1));
     const commentMap = new Map<string, number>();
     (commentsRes.data ?? []).forEach((c) => commentMap.set(c.post_id, (commentMap.get(c.post_id) ?? 0) + 1));
     const myLikes = new Set((myLikesRes.data ?? []).map((l) => l.post_id));
     setPosts(
-      (data ?? []).map((p) => ({
-        ...(p as Omit<Post, "profiles" | "likes_count" | "comments_count" | "liked">),
-        profiles: profileMap.get(p.user_id) ?? null,
-        likes_count: likeMap.get(p.id) ?? 0,
-        comments_count: commentMap.get(p.id) ?? 0,
-        liked: myLikes.has(p.id),
-      })),
+      (data ?? []).map((p) => {
+        const prof = profileMap.get(p.user_id) ?? null;
+        const days = computeDays(prof?.quit_start_date ?? null);
+        return {
+          ...(p as Omit<Post, "profiles" | "likes_count" | "comments_count" | "liked" | "author_days" | "author_stage" | "author_pet">),
+          profiles: prof ? { username: prof.username, avatar_url: prof.avatar_url } : null,
+          author_days: days,
+          author_stage: stageFromDays(days),
+          author_pet: petMap.get(p.user_id) ?? null,
+          likes_count: likeMap.get(p.id) ?? 0,
+          comments_count: commentMap.get(p.id) ?? 0,
+          liked: myLikes.has(p.id),
+        };
+      }),
     );
     setLoading(false);
   };
@@ -173,14 +194,43 @@ function CommunityPage() {
                 key={post.id}
                 className="rounded-3xl border border-border/60 bg-card p-6 shadow-soft transition-smooth hover:-translate-y-0.5"
               >
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-primary">
-                    {categoryLabel(post.category)}
-                  </span>
-                  <span>·</span>
-                  <span>{post.profiles?.username ?? "匿名同行"}</span>
-                  <span>·</span>
-                  <span>{new Date(post.created_at).toLocaleDateString("zh-CN")}</span>
+                <div className="flex items-center gap-3">
+                  <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5">
+                    {post.author_pet ? (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <PetCreature
+                          species={post.author_pet.pet_type}
+                          stage={(post.author_stage ?? 0) as PetStage}
+                          size={56}
+                          state="idle"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-lg">🌱</div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5 text-sm">
+                      <span className="font-medium text-foreground truncate">{post.profiles?.username ?? "匿名同行"}</span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-gradient-primary/10 border border-primary/20 px-2 py-0.5 text-[10px] font-medium text-primary">
+                        Lv.{(post.author_stage ?? 0) + 1} · {STAGE_LABELS[post.author_stage ?? 0]}
+                      </span>
+                      {post.author_pet && (
+                        <span className="text-[10px] text-muted-foreground">
+                          🐾 {post.author_pet.nickname}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-primary">
+                        {categoryLabel(post.category)}
+                      </span>
+                      <span>·</span>
+                      <span>坚持 {post.author_days ?? 1} 天</span>
+                      <span>·</span>
+                      <span>{new Date(post.created_at).toLocaleDateString("zh-CN")}</span>
+                    </div>
+                  </div>
                 </div>
                 <h2 className="mt-3 font-display text-xl">{post.title}</h2>
                 <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{post.content}</p>
