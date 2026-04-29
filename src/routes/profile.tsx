@@ -1,10 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, User as UserIcon, MessageSquarePlus } from "lucide-react";
+import { LogOut, User as UserIcon, MessageSquarePlus, Camera } from "lucide-react";
+import { UserAvatar } from "@/components/UserAvatar";
+import { PET_CATALOG, stageFromDays, type PetSpecies, type PetStage } from "@/components/PetCreature";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -16,7 +18,7 @@ export const Route = createFileRoute("/profile")({
   component: ProfilePage,
 });
 
-type Profile = { id: string; username: string; bio: string | null; quit_start_date: string | null };
+type Profile = { id: string; username: string; bio: string | null; quit_start_date: string | null; avatar_url: string | null };
 
 function ProfilePage() {
   const { user, loading: authLoading } = useAuth();
@@ -26,6 +28,10 @@ function ProfilePage() {
   const [bio, setBio] = useState("");
   const [startDate, setStartDate] = useState("");
   const [saving, setSaving] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [pet, setPet] = useState<{ species: PetSpecies; stage: PetStage } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -35,6 +41,21 @@ function ProfilePage() {
           setUsername(data.username ?? "");
           setBio(data.bio ?? "");
           setStartDate(data.quit_start_date ?? "");
+          setAvatarUrl(data.avatar_url ?? null);
+          const start = data.quit_start_date as string | null;
+          let days = 1;
+          if (start) {
+            const d0 = new Date(start + "T00:00:00");
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            days = Math.max(0, Math.round((today.getTime() - d0.getTime()) / 86400000)) + 1;
+          }
+          supabase.from("user_pets").select("pet_type").eq("user_id", user.id).maybeSingle().then(({ data: p }) => {
+            const valid = new Set(PET_CATALOG.map((c) => c.id));
+            if (p && valid.has(p.pet_type as PetSpecies)) {
+              setPet({ species: p.pet_type as PetSpecies, stage: stageFromDays(days) });
+            }
+          });
         }
       });
     }
@@ -77,12 +98,75 @@ function ProfilePage() {
     navigate({ to: "/" });
   };
 
+  const onPickFile = () => fileInputRef.current?.click();
+
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) return toast.error("请选择图片文件");
+    if (file.size > 5 * 1024 * 1024) return toast.error("图片不能超过 5MB");
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { cacheControl: "3600", upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+      const url = pub.publicUrl;
+      const { error: updErr } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+      if (updErr) throw updErr;
+      setAvatarUrl(url);
+      toast.success("头像已更新");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "上传失败";
+      toast.error(message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <AppShell>
       <div className="mx-auto max-w-2xl px-4 py-8">
         <h1 className="font-display text-3xl">个人资料</h1>
 
         <div className="mt-6 rounded-3xl border border-border/60 bg-card p-6 shadow-soft space-y-4">
+          <div className="flex items-center gap-5 pb-2">
+            <div className="relative">
+              <UserAvatar
+                avatarUrl={avatarUrl}
+                username={username}
+                petSpecies={pet?.species ?? null}
+                petStage={pet?.stage ?? null}
+                size={80}
+                onClick={onPickFile}
+              />
+              <button
+                type="button"
+                onClick={onPickFile}
+                aria-label="更换头像"
+                className="absolute -bottom-1 -left-1 inline-flex h-7 w-7 items-center justify-center rounded-full bg-gradient-primary text-primary-foreground shadow-soft transition-smooth hover:shadow-glow"
+              >
+                <Camera className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium">{username || "未命名"}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {uploading ? "上传中…" : "点击头像或下方相机图标更换头像"}
+              </p>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={onFileChange}
+            />
+          </div>
           <div>
             <label className="text-xs font-medium text-muted-foreground">邮箱</label>
             <p className="mt-1 text-sm text-muted-foreground">{user?.email}</p>
