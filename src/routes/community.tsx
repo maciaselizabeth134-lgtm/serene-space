@@ -44,6 +44,14 @@ function categoryLabel(v: string) {
   return categories.find((c) => c.value === v)?.label ?? v;
 }
 
+function computeDays(start: string | null): number {
+  if (!start) return 1;
+  const d0 = new Date(start + "T00:00:00");
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.max(0, Math.round((today.getTime() - d0.getTime()) / 86400000)) + 1;
+}
+
 function CommunityPage() {
   const { user, loading: authLoading } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
