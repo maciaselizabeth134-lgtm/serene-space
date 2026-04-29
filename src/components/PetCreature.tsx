@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactElement } from "react";
 
 export type PetSpecies = "baopao" | "shantuan" | "senmian" | "yexing" | "xingan";
 export type PetStage = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -180,7 +180,7 @@ function FinalFormShadow({
   const drift = Math.sin(t / 1400) * 3;
 
   // Each species' final form is a simplified, ethereal silhouette
-  const silhouettes: Record<PetSpecies, JSX.Element> = {
+  const silhouettes: Record<PetSpecies, ReactElement> = {
     baopao: (
       <g>
         <circle cx="100" cy="100" r="62" fill={palette.glow} />
