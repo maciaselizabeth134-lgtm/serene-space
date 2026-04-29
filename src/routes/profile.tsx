@@ -1,10 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, User as UserIcon } from "lucide-react";
+import { LogOut, User as UserIcon, MessageSquarePlus } from "lucide-react";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -131,7 +131,100 @@ function ProfilePage() {
         >
           <LogOut className="h-4 w-4" /> 退出登录
         </button>
+
+        <FeedbackSection />
       </div>
     </AppShell>
+  );
+}
+
+const FEEDBACK_CATEGORIES = [
+  { value: "suggestion", label: "功能建议" },
+  { value: "bug", label: "问题反馈" },
+  { value: "experience", label: "使用体验" },
+  { value: "other", label: "其他" },
+];
+
+function FeedbackSection() {
+  const { user } = useAuth();
+  const [category, setCategory] = useState("suggestion");
+  const [content, setContent] = useState("");
+  const [contact, setContact] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!user) return toast.error("请先登录");
+    if (content.trim().length < 5) return toast.error("请至少输入 5 个字");
+    setSubmitting(true);
+    const { error } = await supabase.from("feedback").insert({
+      user_id: user.id,
+      category,
+      content: content.trim(),
+      contact: contact.trim() || null,
+    });
+    setSubmitting(false);
+    if (error) return toast.error(error.message);
+    toast.success("感谢你的反馈,我们已收到 💛");
+    setContent("");
+    setContact("");
+  };
+
+  return (
+    <section className="mt-10 rounded-3xl border border-border/60 bg-card p-6 shadow-soft">
+      <div className="flex items-center gap-2">
+        <div className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <MessageSquarePlus className="h-4 w-4" />
+        </div>
+        <div>
+          <h2 className="font-display text-lg">意见反馈</h2>
+          <p className="text-xs text-muted-foreground">告诉我们你的想法,让平台变得更好。</p>
+        </div>
+      </div>
+
+      <form onSubmit={submit} className="mt-4 space-y-3">
+        <div className="flex flex-wrap gap-2">
+          {FEEDBACK_CATEGORIES.map((c) => (
+            <button
+              key={c.value}
+              type="button"
+              onClick={() => setCategory(c.value)}
+              className={`rounded-full border px-3 py-1 text-xs transition-smooth ${
+                category === c.value
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground"
+              }`}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          rows={4}
+          maxLength={1000}
+          placeholder="详细描述你的建议、问题或想法…"
+          className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary resize-none"
+        />
+        <input
+          value={contact}
+          onChange={(e) => setContact(e.target.value)}
+          maxLength={120}
+          placeholder="联系方式(选填,方便我们回复你)"
+          className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary"
+        />
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">{content.length}/1000</span>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="rounded-full bg-gradient-primary px-6 py-2 text-sm font-medium text-primary-foreground shadow-soft transition-smooth hover:shadow-glow disabled:opacity-60"
+          >
+            {submitting ? "提交中…" : "提交反馈"}
+          </button>
+        </div>
+      </form>
+    </section>
   );
 }
