@@ -29,7 +29,6 @@ type Post = {
   author_days?: number;
   author_stage?: PetStage;
   author_pet?: { pet_type: PetSpecies; nickname: string } | null;
-  author_checkins?: number;
   likes_count?: number;
   comments_count?: number;
   liked?: boolean;
@@ -80,7 +79,7 @@ function CommunityPage() {
     }
     const ids = (data ?? []).map((p) => p.id);
     const userIds = Array.from(new Set((data ?? []).map((p) => p.user_id)));
-    const [likesRes, commentsRes, myLikesRes, profilesRes, petsRes, checkinCountsRes] = await Promise.all([
+    const [likesRes, commentsRes, myLikesRes, profilesRes, petsRes] = await Promise.all([
       supabase.from("likes").select("post_id").in("post_id", ids),
       supabase.from("comments").select("post_id").in("post_id", ids),
       user
@@ -92,9 +91,6 @@ function CommunityPage() {
       userIds.length
         ? supabase.from("user_pets").select("user_id, pet_type, nickname").in("user_id", userIds)
         : Promise.resolve({ data: [] as { user_id: string; pet_type: string; nickname: string }[] }),
-      userIds.length && user
-        ? supabase.rpc("get_checkin_counts", { _user_ids: userIds })
-        : Promise.resolve({ data: [] as { user_id: string; count: number }[] }),
     ]);
     const profileMap = new Map<string, { username: string; avatar_url: string | null; quit_start_date: string | null }>();
     (profilesRes.data ?? []).forEach((p) => profileMap.set(p.id, { username: p.username, avatar_url: p.avatar_url, quit_start_date: p.quit_start_date }));
@@ -104,10 +100,6 @@ function CommunityPage() {
       if (validSpecies.has(p.pet_type as PetSpecies)) {
         petMap.set(p.user_id, { pet_type: p.pet_type as PetSpecies, nickname: p.nickname });
       }
-    });
-    const checkinMap = new Map<string, number>();
-    ((checkinCountsRes.data ?? []) as { user_id: string; count: number | string }[]).forEach((r) => {
-      checkinMap.set(r.user_id, Number(r.count) || 0);
     });
     const likeMap = new Map<string, number>();
     (likesRes.data ?? []).forEach((l) => likeMap.set(l.post_id, (likeMap.get(l.post_id) ?? 0) + 1));
@@ -119,12 +111,11 @@ function CommunityPage() {
         const prof = profileMap.get(p.user_id) ?? null;
         const days = computeDays(prof?.quit_start_date ?? null);
         return {
-          ...(p as Omit<Post, "profiles" | "likes_count" | "comments_count" | "liked" | "author_days" | "author_stage" | "author_pet" | "author_checkins">),
+          ...(p as Omit<Post, "profiles" | "likes_count" | "comments_count" | "liked" | "author_days" | "author_stage" | "author_pet">),
           profiles: prof ? { username: prof.username, avatar_url: prof.avatar_url } : null,
           author_days: days,
           author_stage: stageFromDays(days),
           author_pet: petMap.get(p.user_id) ?? null,
-          author_checkins: checkinMap.get(p.user_id) ?? 0,
           likes_count: likeMap.get(p.id) ?? 0,
           comments_count: commentMap.get(p.id) ?? 0,
           liked: myLikes.has(p.id),
@@ -281,7 +272,7 @@ function CommunityPage() {
                         {categoryLabel(post.category)}
                       </span>
                       <span>·</span>
-                      <span>签到 {post.author_checkins ?? 0} 天</span>
+                      <span>坚持 {post.author_days ?? 1} 天</span>
                       <span>·</span>
                       <span>{new Date(post.created_at).toLocaleDateString("zh-CN")}</span>
                     </div>

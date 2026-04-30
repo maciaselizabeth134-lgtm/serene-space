@@ -300,13 +300,6 @@ export type Database = {
     }
     Functions: {
       ensure_pet_state: { Args: { _user_id: string }; Returns: undefined }
-      get_checkin_counts: {
-        Args: { _user_ids: string[] }
-        Returns: {
-          count: number
-          user_id: string
-        }[]
-      }
     }
     Enums: {
       [_ in never]: never
