@@ -4,7 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, User as UserIcon, MessageSquarePlus } from "lucide-react";
+import { LogOut, User as UserIcon, MessageSquarePlus, Heart, MessageCircle, FileText, Trash2 } from "lucide-react";
 import { AvatarWithPet } from "@/components/AvatarWithPet";
 import { PET_CATALOG, stageFromDays, type PetSpecies, type PetStage } from "@/components/PetCreature";
 
@@ -170,6 +170,7 @@ function ProfilePage() {
         </button>
 
         <FeedbackSection />
+        {user && <MyActivitySection userId={user.id} />}
       </div>
     </AppShell>
   );
@@ -262,6 +263,194 @@ function FeedbackSection() {
           </button>
         </div>
       </form>
+    </section>
+  );
+}
+
+type TabKey = "posts" | "comments" | "likes";
+
+type MyPost = { id: string; title: string; content: string; created_at: string; category: string };
+type MyComment = { id: string; content: string; created_at: string; post_id: string; post_title?: string };
+type MyLike = { post_id: string; created_at: string; post_title?: string };
+
+function MyActivitySection({ userId }: { userId: string }) {
+  const [tab, setTab] = useState<TabKey>("posts");
+  const [loading, setLoading] = useState(false);
+  const [posts, setPosts] = useState<MyPost[]>([]);
+  const [comments, setComments] = useState<MyComment[]>([]);
+  const [likes, setLikes] = useState<MyLike[]>([]);
+
+  const load = async () => {
+    setLoading(true);
+    if (tab === "posts") {
+      const { data } = await supabase
+        .from("posts")
+        .select("id, title, content, created_at, category")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+      setPosts((data ?? []) as MyPost[]);
+    } else if (tab === "comments") {
+      const { data } = await supabase
+        .from("comments")
+        .select("id, content, created_at, post_id")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+      const list = (data ?? []) as MyComment[];
+      const ids = Array.from(new Set(list.map((c) => c.post_id)));
+      if (ids.length) {
+        const { data: ps } = await supabase.from("posts").select("id, title").in("id", ids);
+        const m = new Map((ps ?? []).map((p) => [p.id, p.title]));
+        list.forEach((c) => (c.post_title = m.get(c.post_id)));
+      }
+      setComments(list);
+    } else {
+      const { data } = await supabase
+        .from("likes")
+        .select("post_id, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+      const list = (data ?? []) as MyLike[];
+      const ids = Array.from(new Set(list.map((l) => l.post_id)));
+      if (ids.length) {
+        const { data: ps } = await supabase.from("posts").select("id, title").in("id", ids);
+        const m = new Map((ps ?? []).map((p) => [p.id, p.title]));
+        list.forEach((l) => (l.post_title = m.get(l.post_id)));
+      }
+      setLikes(list);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, userId]);
+
+  const deletePost = async (id: string) => {
+    if (!window.confirm("确定要删除这条作品吗?")) return;
+    const { error } = await supabase.from("posts").delete().eq("id", id).eq("user_id", userId);
+    if (error) return toast.error(error.message);
+    toast.success("已删除");
+    setPosts((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const deleteComment = async (id: string) => {
+    if (!window.confirm("确定要删除这条评论吗?")) return;
+    const { error } = await supabase.from("comments").delete().eq("id", id).eq("user_id", userId);
+    if (error) return toast.error(error.message);
+    toast.success("已删除");
+    setComments((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  const unlike = async (postId: string) => {
+    const { error } = await supabase.from("likes").delete().eq("post_id", postId).eq("user_id", userId);
+    if (error) return toast.error(error.message);
+    setLikes((prev) => prev.filter((l) => l.post_id !== postId));
+  };
+
+  const tabs: { key: TabKey; label: string; icon: typeof Heart }[] = [
+    { key: "posts", label: "我的发言", icon: FileText },
+    { key: "comments", label: "我的评论", icon: MessageCircle },
+    { key: "likes", label: "我的点赞", icon: Heart },
+  ];
+
+  return (
+    <section className="mt-10 rounded-3xl border border-border/60 bg-card p-6 shadow-soft">
+      <h2 className="font-display text-lg">我的动态</h2>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {tabs.map((t) => {
+          const Icon = t.icon;
+          const active = tab === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-smooth ${
+                active ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 space-y-2">
+        {loading ? (
+          <p className="py-8 text-center text-xs text-muted-foreground">加载中…</p>
+        ) : tab === "posts" ? (
+          posts.length === 0 ? (
+            <p className="py-8 text-center text-xs text-muted-foreground">还没有发布过作品</p>
+          ) : (
+            posts.map((p) => (
+              <div key={p.id} className="rounded-2xl border border-border/60 bg-background p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm truncate">{p.title}</p>
+                    <p className="mt-1 text-xs text-muted-foreground line-clamp-2 whitespace-pre-wrap">{p.content}</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">
+                      {new Date(p.created_at).toLocaleDateString("zh-CN")}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => deletePost(p.id)}
+                    className="text-muted-foreground hover:text-destructive transition-smooth"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )
+        ) : tab === "comments" ? (
+          comments.length === 0 ? (
+            <p className="py-8 text-center text-xs text-muted-foreground">还没有发表过评论</p>
+          ) : (
+            comments.map((c) => (
+              <div key={c.id} className="rounded-2xl border border-border/60 bg-background p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-muted-foreground truncate">在 「{c.post_title ?? "已删除作品"}」</p>
+                    <p className="mt-1 text-sm whitespace-pre-wrap">{c.content}</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">
+                      {new Date(c.created_at).toLocaleDateString("zh-CN")}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => deleteComment(c.id)}
+                    className="text-muted-foreground hover:text-destructive transition-smooth"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )
+        ) : likes.length === 0 ? (
+          <p className="py-8 text-center text-xs text-muted-foreground">还没有点赞过任何作品</p>
+        ) : (
+          likes.map((l) => (
+            <div key={l.post_id} className="rounded-2xl border border-border/60 bg-background p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm truncate">{l.post_title ?? "已删除作品"}</p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    {new Date(l.created_at).toLocaleDateString("zh-CN")}
+                  </p>
+                </div>
+                <button
+                  onClick={() => unlike(l.post_id)}
+                  className="inline-flex items-center gap-1 text-xs text-primary hover:text-destructive transition-smooth"
+                >
+                  <Heart className="h-4 w-4 fill-current" />
+                  取消
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
     </section>
   );
 }

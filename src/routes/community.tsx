@@ -4,7 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { MessageCircle, Heart, Plus, Sparkles } from "lucide-react";
+import { MessageCircle, Heart, Plus, Sparkles, Trash2 } from "lucide-react";
 import { PET_CATALOG, STAGE_LABELS, stageFromDays, type PetSpecies, type PetStage } from "@/components/PetCreature";
 import { AvatarWithPet } from "@/components/AvatarWithPet";
 
@@ -146,6 +146,15 @@ function CommunityPage() {
     );
   };
 
+  const deletePost = async (post: Post) => {
+    if (!user || user.id !== post.user_id) return;
+    if (!window.confirm("确定要删除这条作品吗?此操作不可撤销。")) return;
+    const { error } = await supabase.from("posts").delete().eq("id", post.id).eq("user_id", user.id);
+    if (error) return toast.error(error.message);
+    toast.success("已删除");
+    setPosts((prev) => prev.filter((p) => p.id !== post.id));
+  };
+
   return (
     <AppShell>
       <div className="mx-auto max-w-4xl px-4 py-8">
@@ -251,6 +260,15 @@ function CommunityPage() {
                     <MessageCircle className="h-4 w-4" />
                     {post.comments_count}
                   </span>
+                  {user?.id === post.user_id && (
+                    <button
+                      onClick={() => deletePost(post)}
+                      className="ml-auto inline-flex items-center gap-1.5 transition-smooth hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      删除
+                    </button>
+                  )}
                 </div>
               </article>
             ))
