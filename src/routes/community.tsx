@@ -5,7 +5,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MessageCircle, Heart, Plus, Sparkles } from "lucide-react";
-import { PET_CATALOG, PetCreature, STAGE_LABELS, stageFromDays, type PetSpecies, type PetStage } from "@/components/PetCreature";
+import { PET_CATALOG, STAGE_LABELS, stageFromDays, type PetSpecies, type PetStage } from "@/components/PetCreature";
+import { AvatarWithPet } from "@/components/AvatarWithPet";
 
 export const Route = createFileRoute("/community")({
   head: () => ({
@@ -203,20 +204,16 @@ function CommunityPage() {
                 className="rounded-3xl border border-border/60 bg-card p-6 shadow-soft transition-smooth hover:-translate-y-0.5"
               >
                 <div className="flex items-center gap-3">
-                  <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5">
-                    {post.author_pet ? (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <PetCreature
-                          species={post.author_pet.pet_type}
-                          stage={(post.author_stage ?? 0) as PetStage}
-                          size={56}
-                          state="idle"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-lg">🌱</div>
-                    )}
-                  </div>
+                  <AvatarWithPet
+                    userId={post.user_id}
+                    avatarUrl={post.profiles?.avatar_url ?? null}
+                    username={post.profiles?.username ?? null}
+                    petSpecies={post.author_pet?.pet_type ?? null}
+                    petStage={(post.author_stage ?? 0) as PetStage}
+                    size={52}
+                    editable={user?.id === post.user_id}
+                    onUpdated={() => load()}
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5 text-sm">
                       <span className="font-medium text-foreground truncate">{post.profiles?.username ?? "匿名同行"}</span>
