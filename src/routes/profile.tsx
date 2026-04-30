@@ -5,6 +5,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LogOut, User as UserIcon, MessageSquarePlus } from "lucide-react";
+import { AvatarWithPet } from "@/components/AvatarWithPet";
+import { PET_CATALOG, stageFromDays, type PetSpecies, type PetStage } from "@/components/PetCreature";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -16,7 +18,7 @@ export const Route = createFileRoute("/profile")({
   component: ProfilePage,
 });
 
-type Profile = { id: string; username: string; bio: string | null; quit_start_date: string | null };
+type Profile = { id: string; username: string; bio: string | null; quit_start_date: string | null; avatar_url: string | null };
 
 function ProfilePage() {
   const { user, loading: authLoading } = useAuth();
@@ -26,6 +28,8 @@ function ProfilePage() {
   const [bio, setBio] = useState("");
   const [startDate, setStartDate] = useState("");
   const [saving, setSaving] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [pet, setPet] = useState<{ species: PetSpecies; stage: PetStage } | null>(null);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -35,10 +39,28 @@ function ProfilePage() {
           setUsername(data.username ?? "");
           setBio(data.bio ?? "");
           setStartDate(data.quit_start_date ?? "");
+          setAvatarUrl(data.avatar_url ?? null);
+        }
+      });
+      supabase.from("user_pets").select("pet_type").eq("user_id", user.id).maybeSingle().then(({ data }) => {
+        const valid = new Set(PET_CATALOG.map((p) => p.id));
+        if (data && valid.has(data.pet_type as PetSpecies)) {
+          setPet({ species: data.pet_type as PetSpecies, stage: 0 });
         }
       });
     }
   }, [user, authLoading]);
+
+  // Update pet stage when start date changes
+  useEffect(() => {
+    if (!pet) return;
+    if (!startDate) return;
+    const d0 = new Date(startDate + "T00:00:00");
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const days = Math.max(0, Math.round((today.getTime() - d0.getTime()) / 86400000)) + 1;
+    setPet((p) => (p ? { ...p, stage: stageFromDays(days) } : p));
+  }, [startDate, pet?.species]);
 
   if (!authLoading && !user) {
     return (
@@ -83,6 +105,21 @@ function ProfilePage() {
         <h1 className="font-display text-3xl">个人资料</h1>
 
         <div className="mt-6 rounded-3xl border border-border/60 bg-card p-6 shadow-soft space-y-4">
+          <div className="flex flex-col items-center gap-3 pb-2">
+            {user && (
+              <AvatarWithPet
+                userId={user.id}
+                avatarUrl={avatarUrl}
+                username={username}
+                petSpecies={pet?.species ?? null}
+                petStage={pet?.stage ?? 0}
+                size={112}
+                editable
+                onUpdated={(url) => setAvatarUrl(url)}
+              />
+            )}
+            <p className="text-xs text-muted-foreground">点击头像更换图片</p>
+          </div>
           <div>
             <label className="text-xs font-medium text-muted-foreground">邮箱</label>
             <p className="mt-1 text-sm text-muted-foreground">{user?.email}</p>
