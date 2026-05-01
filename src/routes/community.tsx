@@ -202,6 +202,7 @@ function CommunityPage() {
         </div>
 
         {showForm && user && <NewPostForm onCreated={() => { setShowForm(false); load(); }} />}
+        {/* moved: form receives current filter as default */}
 
         {/* Posts */}
         <div className="mt-8 space-y-4">
