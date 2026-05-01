@@ -452,6 +452,42 @@ function CommunityPage() {
           )}
         </div>
       </div>
+
+      <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">选择你的自律项目</DialogTitle>
+            <DialogDescription>
+              先告诉我们你想关注什么,我们会带你进入对应的社区圈子。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-2 grid max-h-[60vh] grid-cols-2 gap-2 overflow-y-auto pr-1">
+            {[{ value: "all", label: "全部社区" }, ...categories].map((c) => {
+              const meta = CATEGORY_META[c.value] ?? { emoji: "✨", desc: "" };
+              const active = filter === c.value;
+              return (
+                <button
+                  key={c.value}
+                  onClick={() => chooseCategory(c.value)}
+                  className={`flex flex-col items-start gap-1 rounded-2xl border p-3 text-left transition-smooth ${
+                    active
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-card hover:border-primary/50 hover:bg-primary/5"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl leading-none">{meta.emoji}</span>
+                    <span className="text-sm font-medium">
+                      {c.value === "all" ? "全部社区" : c.label}
+                    </span>
+                  </div>
+                  <p className="text-[11px] leading-snug text-muted-foreground">{meta.desc}</p>
+                </button>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
