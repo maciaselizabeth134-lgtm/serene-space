@@ -324,15 +324,32 @@ export function PetCompanion() {
                   )}
                 >
                   {m.content || (loading && i === messages.length - 1 ? (
-                    <span className="inline-flex gap-1">
-                      <span className="h-1.5 w-1.5 rounded-full bg-foreground/50 animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <span className="h-1.5 w-1.5 rounded-full bg-foreground/50 animate-bounce" style={{ animationDelay: "120ms" }} />
-                      <span className="h-1.5 w-1.5 rounded-full bg-foreground/50 animate-bounce" style={{ animationDelay: "240ms" }} />
+                    <span className="inline-flex items-center gap-2 text-muted-foreground">
+                      <span className="inline-flex gap-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "120ms" }} />
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "240ms" }} />
+                      </span>
+                      <span className="text-[11px]">小清正在思考…</span>
                     </span>
                   ) : null)}
                 </div>
               </div>
             ))}
+            {loading && messages[messages.length - 1]?.role === "user" && (
+              <div className="flex justify-start">
+                <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-muted px-3.5 py-2 text-sm animate-fade-in">
+                  <span className="inline-flex items-center gap-2 text-muted-foreground">
+                    <span className="inline-flex gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "120ms" }} />
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "240ms" }} />
+                    </span>
+                    <span className="text-[11px]">小清正在思考…</span>
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="border-t border-border/50 p-2.5 bg-background/60">
