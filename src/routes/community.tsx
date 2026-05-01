@@ -39,6 +39,12 @@ const categories = [
   { value: "question", label: "求助" },
   { value: "milestone", label: "里程碑" },
   { value: "encourage", label: "鼓励" },
+  { value: "quit_smoke", label: "戒烟" },
+  { value: "quit_alcohol", label: "戒酒" },
+  { value: "quit_milktea", label: "戒奶茶" },
+  { value: "exercise", label: "锻炼" },
+  { value: "quit_lust", label: "戒淫" },
+  { value: "quit_latenight", label: "戒熬夜" },
 ];
 
 function categoryLabel(v: string) {
