@@ -201,7 +201,13 @@ function CommunityPage() {
           ))}
         </div>
 
-        {showForm && user && <NewPostForm onCreated={() => { setShowForm(false); load(); }} />}
+        {showForm && user && (
+          <NewPostForm
+            defaultCategory={filter !== "all" ? filter : "experience"}
+            lockCategory={filter !== "all"}
+            onCreated={() => { setShowForm(false); load(); }}
+          />
+        )}
 
         {/* Posts */}
         <div className="mt-8 space-y-4">
@@ -285,11 +291,19 @@ function CommunityPage() {
   );
 }
 
-function NewPostForm({ onCreated }: { onCreated: () => void }) {
+function NewPostForm({
+  onCreated,
+  defaultCategory = "experience",
+  lockCategory = false,
+}: {
+  onCreated: () => void;
+  defaultCategory?: string;
+  lockCategory?: boolean;
+}) {
   const { user } = useAuth();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [category, setCategory] = useState("experience");
+  const [category, setCategory] = useState(defaultCategory);
   const [submitting, setSubmitting] = useState(false);
 
   const submit = async (e: FormEvent) => {
@@ -314,20 +328,29 @@ function NewPostForm({ onCreated }: { onCreated: () => void }) {
 
   return (
     <form onSubmit={submit} className="mt-6 rounded-3xl border border-border/60 bg-card p-6 shadow-soft animate-fade-up">
-      <div className="flex flex-wrap gap-2 mb-4">
-        {categories.map((c) => (
-          <button
-            key={c.value}
-            type="button"
-            onClick={() => setCategory(c.value)}
-            className={`rounded-full border px-3 py-1 text-xs transition-smooth ${
-              category === c.value ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"
-            }`}
-          >
-            {c.label}
-          </button>
-        ))}
-      </div>
+      {lockCategory ? (
+        <div className="mb-4 text-xs text-muted-foreground">
+          发布到分类:
+          <span className="ml-2 inline-flex items-center rounded-full border border-primary bg-primary/10 px-3 py-1 text-primary">
+            {categoryLabel(category)}
+          </span>
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {categories.map((c) => (
+            <button
+              key={c.value}
+              type="button"
+              onClick={() => setCategory(c.value)}
+              className={`rounded-full border px-3 py-1 text-xs transition-smooth ${
+                category === c.value ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"
+              }`}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      )}
       <input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
