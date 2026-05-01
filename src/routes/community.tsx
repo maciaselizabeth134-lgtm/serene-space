@@ -7,6 +7,13 @@ import { toast } from "sonner";
 import { MessageCircle, Heart, Plus, Sparkles, Trash2, Trophy } from "lucide-react";
 import { PET_CATALOG, STAGE_LABELS, stageFromDays, type PetSpecies, type PetStage } from "@/components/PetCreature";
 import { AvatarWithPet } from "@/components/AvatarWithPet";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/community")({
   head: () => ({
@@ -47,7 +54,24 @@ const categories = [
   { value: "quit_latenight", label: "戒熬夜" },
 ];
 
+const CATEGORY_META: Record<string, { emoji: string; desc: string }> = {
+  all: { emoji: "🌐", desc: "浏览所有圈子的最新动态" },
+  quit_smoke: { emoji: "🚭", desc: "和烟说再见，呼吸更清新的空气" },
+  quit_alcohol: { emoji: "🍺", desc: "戒酒同行者，清醒地生活" },
+  quit_milktea: { emoji: "🧋", desc: "对奶茶说不，拥抱健康饮食" },
+  exercise: { emoji: "🏃", desc: "动起来，让身体充满活力" },
+  quit_lust: { emoji: "🧘", desc: "节制欲望，找回内心的平静" },
+  quit_latenight: { emoji: "🌙", desc: "早睡早起，告别熬夜疲惫" },
+  experience: { emoji: "💡", desc: "分享自律路上的真实心得" },
+  question: { emoji: "❓", desc: "遇到困难，向同行者求助" },
+  milestone: { emoji: "🏁", desc: "纪念每一个突破的瞬间" },
+  encourage: { emoji: "💪", desc: "互相加油，传递正能量" },
+};
+
+const CATEGORY_STORAGE_KEY = "community_default_category";
+
 function categoryLabel(v: string) {
+  if (v === "all") return "全部社区";
   return categories.find((c) => c.value === v)?.label ?? v;
 }
 
@@ -65,6 +89,26 @@ function CommunityPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState<string>("all");
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  // On first mount: read saved category, or show picker
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = window.localStorage.getItem(CATEGORY_STORAGE_KEY);
+    if (saved) {
+      setFilter(saved);
+    } else {
+      setPickerOpen(true);
+    }
+  }, []);
+
+  const chooseCategory = (value: string) => {
+    setFilter(value);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(CATEGORY_STORAGE_KEY, value);
+    }
+    setPickerOpen(false);
+  };
 
   type RankRow = {
     user_id: string;
@@ -228,6 +272,14 @@ function CommunityPage() {
           <div>
             <h1 className="font-display text-3xl">心得社区</h1>
             <p className="mt-1 text-sm text-muted-foreground">分享你的旅程,鼓励同行的人。</p>
+            <button
+              onClick={() => setPickerOpen(true)}
+              className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground transition-smooth hover:border-primary hover:text-primary"
+            >
+              <span>{CATEGORY_META[filter]?.emoji ?? "🌐"}</span>
+              <span>当前圈子:{categoryLabel(filter)}</span>
+              <span className="text-[10px] opacity-70">切换 ›</span>
+            </button>
           </div>
           {user ? (
             <button
