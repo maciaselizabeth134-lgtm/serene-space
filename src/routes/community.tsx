@@ -4,7 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { MessageCircle, Heart, Plus, Sparkles, Trash2 } from "lucide-react";
+import { MessageCircle, Heart, Plus, Sparkles, Trash2, Trophy } from "lucide-react";
 import { PET_CATALOG, STAGE_LABELS, stageFromDays, type PetSpecies, type PetStage } from "@/components/PetCreature";
 import { AvatarWithPet } from "@/components/AvatarWithPet";
 
@@ -65,6 +65,61 @@ function CommunityPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState<string>("all");
+
+  type RankRow = {
+    user_id: string;
+    count: number;
+    username: string | null;
+    avatar_url: string | null;
+    quit_start_date: string | null;
+    pet?: { pet_type: PetSpecies; nickname: string } | null;
+  };
+  const [ranking, setRanking] = useState<RankRow[]>([]);
+  const [rankLoading, setRankLoading] = useState(true);
+
+  const loadRanking = async () => {
+    setRankLoading(true);
+    // get all distinct users that have checkins via profiles + RPC
+    const { data: profs } = await supabase
+      .from("profiles")
+      .select("id, username, avatar_url, quit_start_date");
+    const ids = (profs ?? []).map((p) => p.id);
+    if (ids.length === 0) {
+      setRanking([]);
+      setRankLoading(false);
+      return;
+    }
+    const [countsRes, petsRes] = await Promise.all([
+      supabase.rpc("get_checkin_counts", { _user_ids: ids }),
+      supabase.from("user_pets").select("user_id, pet_type, nickname").in("user_id", ids),
+    ]);
+    const profMap = new Map(
+      (profs ?? []).map((p) => [p.id, p] as const),
+    );
+    const validSpecies = new Set(PET_CATALOG.map((p) => p.id));
+    const petMap = new Map<string, { pet_type: PetSpecies; nickname: string }>();
+    (petsRes.data ?? []).forEach((p) => {
+      if (validSpecies.has(p.pet_type as PetSpecies)) {
+        petMap.set(p.user_id, { pet_type: p.pet_type as PetSpecies, nickname: p.nickname });
+      }
+    });
+    const rows: RankRow[] = ((countsRes.data ?? []) as { user_id: string; count: number }[])
+      .map((r) => {
+        const p = profMap.get(r.user_id);
+        return {
+          user_id: r.user_id,
+          count: Number(r.count),
+          username: p?.username ?? null,
+          avatar_url: p?.avatar_url ?? null,
+          quit_start_date: p?.quit_start_date ?? null,
+          pet: petMap.get(r.user_id) ?? null,
+        };
+      })
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+    setRanking(rows);
+    setRankLoading(false);
+  };
 
   const load = async () => {
     setLoading(true);
@@ -133,6 +188,11 @@ function CommunityPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter, authLoading, user?.id]);
 
+  useEffect(() => {
+    if (!authLoading) loadRanking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading]);
+
   const toggleLike = async (post: Post) => {
     if (!user) {
       toast.error("请先登录");
@@ -200,6 +260,59 @@ function CommunityPage() {
             </button>
           ))}
         </div>
+
+        {/* Check-in Leaderboard */}
+        <section className="mt-6 rounded-3xl border border-border/60 bg-card p-5 shadow-soft">
+          <div className="flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-primary" />
+            <h2 className="font-display text-lg">打卡排行榜</h2>
+            <span className="text-xs text-muted-foreground">· 累计打卡天数 Top 10</span>
+          </div>
+          {rankLoading ? (
+            <p className="mt-3 text-sm text-muted-foreground">加载中...</p>
+          ) : ranking.length === 0 ? (
+            <p className="mt-3 text-sm text-muted-foreground">还没有人打卡,快去成为第一名!</p>
+          ) : (
+            <ol className="mt-4 space-y-2">
+              {ranking.map((r, i) => {
+                const days = computeDays(r.quit_start_date);
+                const stage = stageFromDays(days);
+                const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`;
+                return (
+                  <li
+                    key={r.user_id}
+                    className="flex items-center gap-3 rounded-2xl border border-border/40 bg-background/60 px-3 py-2"
+                  >
+                    <span className={`w-10 shrink-0 text-center text-sm font-semibold ${i < 3 ? "text-primary" : "text-muted-foreground"}`}>
+                      {medal}
+                    </span>
+                    <AvatarWithPet
+                      userId={r.user_id}
+                      avatarUrl={r.avatar_url}
+                      username={r.username}
+                      petSpecies={r.pet?.pet_type ?? null}
+                      petStage={stage}
+                      size={40}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 text-sm">
+                        <span className="truncate font-medium">{r.username ?? "匿名同行"}</span>
+                        <span className="rounded-full border border-primary/20 bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">
+                          Lv.{stage + 1}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">坚持 {days} 天</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-display text-lg leading-none text-primary">{r.count}</div>
+                      <div className="text-[10px] text-muted-foreground">次打卡</div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+        </section>
 
         {showForm && user && (
           <NewPostForm
