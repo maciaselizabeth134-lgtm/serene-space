@@ -18,7 +18,16 @@ export const Route = createFileRoute("/checkin")({
   component: CheckinPage,
 });
 
-type Checkin = { id: string; checkin_date: string; mood: string; note: string | null };
+type Checkin = { id: string; checkin_date: string; mood: string; note: string | null; categories: string[] };
+
+const DISCIPLINE_PROJECTS: { value: string; label: string; emoji: string }[] = [
+  { value: "quit_smoke", label: "戒烟", emoji: "🚭" },
+  { value: "quit_alcohol", label: "戒酒", emoji: "🍺" },
+  { value: "quit_milktea", label: "戒奶茶", emoji: "🧋" },
+  { value: "exercise", label: "锻炼", emoji: "🏃" },
+  { value: "quit_lust", label: "戒淫", emoji: "🧘" },
+  { value: "quit_latenight", label: "戒熬夜", emoji: "🌙" },
+];
 
 const moods = [
   { v: "great", l: "💪 状态极佳" },
@@ -45,6 +54,7 @@ function CheckinPage() {
   const [todayCheckin, setTodayCheckin] = useState<Checkin | null>(null);
   const [mood, setMood] = useState("good");
   const [note, setNote] = useState("");
+  const [selectedCats, setSelectedCats] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const today = todayStr();
 
@@ -59,6 +69,10 @@ function CheckinPage() {
     setCheckins((ck ?? []) as Checkin[]);
     const t = (ck ?? []).find((c) => c.checkin_date === today) as Checkin | undefined;
     setTodayCheckin(t ?? null);
+    if (t) {
+      setSelectedCats(t.categories ?? []);
+      if (t.mood) setMood(t.mood);
+    }
     setLoading(false);
   };
 
@@ -82,13 +96,17 @@ function CheckinPage() {
   const checkin = async () => {
     if (!user) return;
     const { error } = await supabase.from("checkins").upsert(
-      { user_id: user.id, checkin_date: today, mood, note: note || null },
+      { user_id: user.id, checkin_date: today, mood, note: note || null, categories: selectedCats },
       { onConflict: "user_id,checkin_date" }
     );
     if (error) return toast.error(error.message);
     toast.success("打卡成功!愿今日清明。");
     setNote("");
     load();
+  };
+
+  const toggleCat = (v: string) => {
+    setSelectedCats((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
   };
 
   const reset = async () => {
@@ -158,6 +176,28 @@ function CheckinPage() {
             </div>
           </div>
 
+          <div className="mt-5">
+            <p className="text-xs font-medium text-muted-foreground">
+              今天打卡哪些自律项目？<span className="ml-1 text-muted-foreground/70">(可多选,不选则记为通用打卡)</span>
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {DISCIPLINE_PROJECTS.map((p) => {
+                const active = selectedCats.includes(p.value);
+                return (
+                  <button
+                    key={p.value}
+                    onClick={() => toggleCat(p.value)}
+                    className={`rounded-full border px-3 py-1.5 text-xs transition-smooth ${
+                      active ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"
+                    }`}
+                  >
+                    <span className="mr-1">{p.emoji}</span>{p.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -195,6 +235,19 @@ function CheckinPage() {
                       <span className="text-sm font-medium">{c.checkin_date}</span>
                       <span className="text-xs text-muted-foreground">{m?.l ?? c.mood}</span>
                     </div>
+                    {c.categories && c.categories.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {c.categories.map((cat) => {
+                          const p = DISCIPLINE_PROJECTS.find((x) => x.value === cat);
+                          if (!p) return null;
+                          return (
+                            <span key={cat} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] text-primary">
+                              {p.emoji}{p.label}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
                     {c.note && <p className="mt-2 text-xs text-muted-foreground leading-relaxed">{c.note}</p>}
                   </div>
                 );
