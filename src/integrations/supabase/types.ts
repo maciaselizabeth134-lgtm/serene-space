@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       checkins: {
         Row: {
+          categories: string[]
           checkin_date: string
           created_at: string
           id: string
@@ -24,6 +25,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          categories?: string[]
           checkin_date?: string
           created_at?: string
           id?: string
@@ -32,6 +34,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          categories?: string[]
           checkin_date?: string
           created_at?: string
           id?: string
@@ -300,6 +303,13 @@ export type Database = {
     }
     Functions: {
       ensure_pet_state: { Args: { _user_id: string }; Returns: undefined }
+      get_category_checkin_counts: {
+        Args: { _category: string; _user_ids: string[] }
+        Returns: {
+          count: number
+          user_id: string
+        }[]
+      }
       get_checkin_counts: {
         Args: { _user_ids: string[] }
         Returns: {
