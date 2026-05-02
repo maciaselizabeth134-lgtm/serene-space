@@ -193,7 +193,8 @@ function CommunityPage() {
     }
     const ids = (data ?? []).map((p) => p.id);
     const userIds = Array.from(new Set((data ?? []).map((p) => p.user_id)));
-    const [likesRes, commentsRes, myLikesRes, profilesRes, petsRes] = await Promise.all([
+    const isDiscipline = DISCIPLINE_CATEGORIES.has(filter);
+    const [likesRes, commentsRes, myLikesRes, profilesRes, petsRes, catCountsRes] = await Promise.all([
       supabase.from("likes").select("post_id").in("post_id", ids),
       supabase.from("comments").select("post_id").in("post_id", ids),
       user
@@ -205,7 +206,14 @@ function CommunityPage() {
       userIds.length
         ? supabase.from("user_pets").select("user_id, pet_type, nickname").in("user_id", userIds)
         : Promise.resolve({ data: [] as { user_id: string; pet_type: string; nickname: string }[] }),
+      isDiscipline && userIds.length
+        ? supabase.rpc("get_category_checkin_counts", { _user_ids: userIds, _category: filter })
+        : Promise.resolve({ data: [] as { user_id: string; count: number }[] }),
     ]);
+    const catCountMap = new Map<string, number>();
+    ((catCountsRes.data ?? []) as { user_id: string; count: number }[]).forEach((r) =>
+      catCountMap.set(r.user_id, Number(r.count)),
+    );
     const profileMap = new Map<string, { username: string; avatar_url: string | null; quit_start_date: string | null }>();
     (profilesRes.data ?? []).forEach((p) => profileMap.set(p.id, { username: p.username, avatar_url: p.avatar_url, quit_start_date: p.quit_start_date }));
     const validSpecies = new Set(PET_CATALOG.map((p) => p.id));
@@ -223,7 +231,9 @@ function CommunityPage() {
     setPosts(
       (data ?? []).map((p) => {
         const prof = profileMap.get(p.user_id) ?? null;
-        const days = computeDays(prof?.quit_start_date ?? null);
+        const days = isDiscipline
+          ? (catCountMap.get(p.user_id) ?? 0)
+          : computeDays(prof?.quit_start_date ?? null);
         return {
           ...(p as Omit<Post, "profiles" | "likes_count" | "comments_count" | "liked" | "author_days" | "author_stage" | "author_pet">),
           profiles: prof ? { username: prof.username, avatar_url: prof.avatar_url } : null,
