@@ -70,6 +70,15 @@ const CATEGORY_META: Record<string, { emoji: string; desc: string }> = {
 
 const CATEGORY_STORAGE_KEY = "community_default_category";
 
+const DISCIPLINE_CATEGORIES = new Set([
+  "quit_smoke",
+  "quit_alcohol",
+  "quit_milktea",
+  "exercise",
+  "quit_lust",
+  "quit_latenight",
+]);
+
 function categoryLabel(v: string) {
   if (v === "all") return "全部社区";
   return categories.find((c) => c.value === v)?.label ?? v;
@@ -133,8 +142,11 @@ function CommunityPage() {
       setRankLoading(false);
       return;
     }
+    const isDiscipline = DISCIPLINE_CATEGORIES.has(filter);
     const [countsRes, petsRes] = await Promise.all([
-      supabase.rpc("get_checkin_counts", { _user_ids: ids }),
+      isDiscipline
+        ? supabase.rpc("get_category_checkin_counts", { _user_ids: ids, _category: filter })
+        : supabase.rpc("get_checkin_counts", { _user_ids: ids }),
       supabase.from("user_pets").select("user_id, pet_type, nickname").in("user_id", ids),
     ]);
     const profMap = new Map(
