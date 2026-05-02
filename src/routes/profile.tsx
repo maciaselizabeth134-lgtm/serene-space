@@ -4,7 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, User as UserIcon, MessageSquarePlus, Heart, MessageCircle, FileText, Trash2 } from "lucide-react";
+import { LogOut, User as UserIcon, MessageSquarePlus, Heart, MessageCircle, FileText, Trash2, ChevronDown } from "lucide-react";
 import { AvatarWithPet } from "@/components/AvatarWithPet";
 import { PET_CATALOG, stageFromDays, type PetSpecies, type PetStage } from "@/components/PetCreature";
 
@@ -189,6 +189,7 @@ function FeedbackSection() {
   const [content, setContent] = useState("");
   const [contact, setContact] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -209,18 +210,24 @@ function FeedbackSection() {
   };
 
   return (
-    <section className="mt-10 rounded-3xl border border-border/60 bg-card p-6 shadow-soft">
-      <div className="flex items-center gap-2">
+    <section className="mt-6 rounded-3xl border border-border/60 bg-card shadow-soft overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-3 p-5 text-left transition-smooth hover:bg-muted/30"
+      >
         <div className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-primary/10 text-primary">
           <MessageSquarePlus className="h-4 w-4" />
         </div>
-        <div>
+        <div className="flex-1 min-w-0">
           <h2 className="font-display text-lg">意见反馈</h2>
           <p className="text-xs text-muted-foreground">告诉我们你的想法,让平台变得更好。</p>
         </div>
-      </div>
+        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
 
-      <form onSubmit={submit} className="mt-4 space-y-3">
+      {open && (
+      <form onSubmit={submit} className="px-5 pb-5 space-y-3">
         <div className="flex flex-wrap gap-2">
           {FEEDBACK_CATEGORIES.map((c) => (
             <button
@@ -263,6 +270,7 @@ function FeedbackSection() {
           </button>
         </div>
       </form>
+      )}
     </section>
   );
 }
@@ -279,6 +287,7 @@ function MyActivitySection({ userId }: { userId: string }) {
   const [posts, setPosts] = useState<MyPost[]>([]);
   const [comments, setComments] = useState<MyComment[]>([]);
   const [likes, setLikes] = useState<MyLike[]>([]);
+  const [open, setOpen] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -322,9 +331,10 @@ function MyActivitySection({ userId }: { userId: string }) {
   };
 
   useEffect(() => {
+    if (!open) return;
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, userId]);
+  }, [tab, userId, open]);
 
   const deletePost = async (id: string) => {
     if (!window.confirm("确定要删除这条作品吗?")) return;
@@ -355,9 +365,25 @@ function MyActivitySection({ userId }: { userId: string }) {
   ];
 
   return (
-    <section className="mt-10 rounded-3xl border border-border/60 bg-card p-6 shadow-soft">
-      <h2 className="font-display text-lg">我的动态</h2>
-      <div className="mt-3 flex flex-wrap gap-2">
+    <section className="mt-6 rounded-3xl border border-border/60 bg-card shadow-soft overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-3 p-5 text-left transition-smooth hover:bg-muted/30"
+      >
+        <div className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <FileText className="h-4 w-4" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h2 className="font-display text-lg">我的动态</h2>
+          <p className="text-xs text-muted-foreground">查看你的发言、评论和点赞。</p>
+        </div>
+        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+      <div className="px-5 pb-5">
+      <div className="flex flex-wrap gap-2">
         {tabs.map((t) => {
           const Icon = t.icon;
           const active = tab === t.key;
@@ -451,6 +477,8 @@ function MyActivitySection({ userId }: { userId: string }) {
           ))
         )}
       </div>
+      </div>
+      )}
     </section>
   );
 }
