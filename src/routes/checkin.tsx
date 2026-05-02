@@ -100,7 +100,7 @@ function CheckinPage() {
       { onConflict: "user_id,checkin_date" }
     );
     if (error) return toast.error(error.message);
-    toast.success("打卡成功!愿今日清明。");
+    toast.success("打卡成功");
     setNote("");
     load();
   };
