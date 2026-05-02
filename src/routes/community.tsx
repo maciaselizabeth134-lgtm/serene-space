@@ -247,7 +247,7 @@ function CommunityPage() {
   useEffect(() => {
     if (!authLoading) loadRanking();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading]);
+  }, [authLoading, filter]);
 
   const toggleLike = async (post: Post) => {
     if (!user) {
