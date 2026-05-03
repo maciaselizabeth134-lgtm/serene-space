@@ -13,6 +13,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PetRouteImport } from './routes/pet'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LearnRouteImport } from './routes/learn'
 import { Route as ConfessionsRouteImport } from './routes/confessions'
 import { Route as CommunityRouteImport } from './routes/community'
@@ -39,6 +40,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const PetRoute = PetRouteImport.update({
   id: '/pet',
   path: '/pet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LearnRoute = LearnRouteImport.update({
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/community': typeof CommunityRoute
   '/confessions': typeof ConfessionsRoute
   '/learn': typeof LearnRoute
+  '/notifications': typeof NotificationsRoute
   '/pet': typeof PetRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRoute
   '/confessions': typeof ConfessionsRoute
   '/learn': typeof LearnRoute
+  '/notifications': typeof NotificationsRoute
   '/pet': typeof PetRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/community': typeof CommunityRoute
   '/confessions': typeof ConfessionsRoute
   '/learn': typeof LearnRoute
+  '/notifications': typeof NotificationsRoute
   '/pet': typeof PetRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/confessions'
     | '/learn'
+    | '/notifications'
     | '/pet'
     | '/privacy'
     | '/profile'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/confessions'
     | '/learn'
+    | '/notifications'
     | '/pet'
     | '/privacy'
     | '/profile'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/confessions'
     | '/learn'
+    | '/notifications'
     | '/pet'
     | '/privacy'
     | '/profile'
@@ -167,6 +179,7 @@ export interface RootRouteChildren {
   CommunityRoute: typeof CommunityRoute
   ConfessionsRoute: typeof ConfessionsRoute
   LearnRoute: typeof LearnRoute
+  NotificationsRoute: typeof NotificationsRoute
   PetRoute: typeof PetRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
@@ -201,6 +214,13 @@ declare module '@tanstack/react-router' {
       path: '/pet'
       fullPath: '/pet'
       preLoaderRoute: typeof PetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/learn': {
@@ -263,6 +283,7 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityRoute: CommunityRoute,
   ConfessionsRoute: ConfessionsRoute,
   LearnRoute: LearnRoute,
+  NotificationsRoute: NotificationsRoute,
   PetRoute: PetRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
