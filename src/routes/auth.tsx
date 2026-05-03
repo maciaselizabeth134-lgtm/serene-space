@@ -21,9 +21,15 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [adult, setAdult] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (mode === "signup") {
+      if (!agreed) return toast.error("请先勾选同意协议");
+      if (!adult) return toast.error("请确认你已年满 18 岁");
+    }
     setLoading(true);
     try {
       if (mode === "signup") {
@@ -114,6 +120,33 @@ function AuthPage() {
             >
               {loading ? "请稍候..." : mode === "login" ? "登 录" : "注 册"}
             </button>
+            {mode === "signup" && (
+              <div className="space-y-2 pt-2">
+                <label className="flex items-start gap-2 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={adult}
+                    onChange={(e) => setAdult(e.target.checked)}
+                    className="mt-0.5"
+                  />
+                  <span>我已年满 18 周岁</span>
+                </label>
+                <label className="flex items-start gap-2 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={agreed}
+                    onChange={(e) => setAgreed(e.target.checked)}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    我已阅读并同意{" "}
+                    <Link to="/terms" className="text-primary underline-offset-2 hover:underline">《用户协议》</Link>
+                    {" "}和{" "}
+                    <Link to="/privacy" className="text-primary underline-offset-2 hover:underline">《隐私政策》</Link>
+                  </span>
+                </label>
+              </div>
+            )}
           </form>
 
           <button
