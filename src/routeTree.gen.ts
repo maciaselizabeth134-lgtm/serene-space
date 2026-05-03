@@ -18,6 +18,7 @@ import { Route as ConfessionsRouteImport } from './routes/confessions'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CheckinRouteImport } from './routes/checkin'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AboutAppRouteImport } from './routes/about-app'
 import { Route as IndexRouteImport } from './routes/index'
 
 const TermsRoute = TermsRouteImport.update({
@@ -65,6 +66,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutAppRoute = AboutAppRouteImport.update({
+  id: '/about-app',
+  path: '/about-app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -73,6 +79,7 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about-app': typeof AboutAppRoute
   '/auth': typeof AuthRoute
   '/checkin': typeof CheckinRoute
   '/community': typeof CommunityRoute
@@ -85,6 +92,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about-app': typeof AboutAppRoute
   '/auth': typeof AuthRoute
   '/checkin': typeof CheckinRoute
   '/community': typeof CommunityRoute
@@ -98,6 +106,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about-app': typeof AboutAppRoute
   '/auth': typeof AuthRoute
   '/checkin': typeof CheckinRoute
   '/community': typeof CommunityRoute
@@ -112,6 +121,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about-app'
     | '/auth'
     | '/checkin'
     | '/community'
@@ -124,6 +134,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about-app'
     | '/auth'
     | '/checkin'
     | '/community'
@@ -136,6 +147,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/about-app'
     | '/auth'
     | '/checkin'
     | '/community'
@@ -149,6 +161,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutAppRoute: typeof AboutAppRoute
   AuthRoute: typeof AuthRoute
   CheckinRoute: typeof CheckinRoute
   CommunityRoute: typeof CommunityRoute
@@ -225,6 +238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about-app': {
+      id: '/about-app'
+      path: '/about-app'
+      fullPath: '/about-app'
+      preLoaderRoute: typeof AboutAppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -237,6 +257,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutAppRoute: AboutAppRoute,
   AuthRoute: AuthRoute,
   CheckinRoute: CheckinRoute,
   CommunityRoute: CommunityRoute,
