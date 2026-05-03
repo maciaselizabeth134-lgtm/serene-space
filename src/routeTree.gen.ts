@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PetRouteImport } from './routes/pet'
 import { Route as LearnRouteImport } from './routes/learn'
 import { Route as ConfessionsRouteImport } from './routes/confessions'
@@ -27,6 +28,11 @@ const TermsRoute = TermsRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PetRoute = PetRouteImport.update({
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/confessions': typeof ConfessionsRoute
   '/learn': typeof LearnRoute
   '/pet': typeof PetRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/terms': typeof TermsRoute
 }
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/confessions': typeof ConfessionsRoute
   '/learn': typeof LearnRoute
   '/pet': typeof PetRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/terms': typeof TermsRoute
 }
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/confessions': typeof ConfessionsRoute
   '/learn': typeof LearnRoute
   '/pet': typeof PetRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/terms': typeof TermsRoute
 }
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/confessions'
     | '/learn'
     | '/pet'
+    | '/privacy'
     | '/profile'
     | '/terms'
   fileRoutesByTo: FileRoutesByTo
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/confessions'
     | '/learn'
     | '/pet'
+    | '/privacy'
     | '/profile'
     | '/terms'
   id:
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/confessions'
     | '/learn'
     | '/pet'
+    | '/privacy'
     | '/profile'
     | '/terms'
   fileRoutesById: FileRoutesById
@@ -143,6 +155,7 @@ export interface RootRouteChildren {
   ConfessionsRoute: typeof ConfessionsRoute
   LearnRoute: typeof LearnRoute
   PetRoute: typeof PetRoute
+  PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   TermsRoute: typeof TermsRoute
 }
@@ -161,6 +174,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pet': {
@@ -223,6 +243,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConfessionsRoute: ConfessionsRoute,
   LearnRoute: LearnRoute,
   PetRoute: PetRoute,
+  PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   TermsRoute: TermsRoute,
 }
