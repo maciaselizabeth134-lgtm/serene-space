@@ -201,6 +201,8 @@ function FeedbackSection() {
     e.preventDefault();
     if (!user) return toast.error("请先登录");
     if (content.trim().length < 5) return toast.error("请至少输入 5 个字");
+    const mod = await moderateText(content);
+    if (!mod.ok) return toast.error("内容不符合社区规范，请修改后再提交");
     setSubmitting(true);
     const { error } = await supabase.from("feedback").insert({
       user_id: user.id,
