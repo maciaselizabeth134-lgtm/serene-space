@@ -189,6 +189,117 @@ const FEEDBACK_CATEGORIES = [
   { value: "other", label: "其他" },
 ];
 
+function AboutLink() {
+  return (
+    <Link
+      to="/about-app"
+      className="mt-6 flex w-full items-center gap-3 rounded-3xl border border-border/60 bg-card p-5 shadow-soft transition-smooth hover:bg-muted/30"
+    >
+      <div className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+        <Info className="h-4 w-4" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <h2 className="font-display text-lg">关于清心</h2>
+        <p className="text-xs text-muted-foreground">版本信息、用户协议与隐私政策。</p>
+      </div>
+      <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
+    </Link>
+  );
+}
+
+function MyFeedbackSection({ userId }: { userId: string }) {
+  const [open, setOpen] = useState(false);
+  const [list, setList] = useState<{ id: string; content: string; reply: string | null; status: string; created_at: string; replied_at: string | null }[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setLoading(true);
+    supabase
+      .from("feedback")
+      .select("id, content, reply, status, created_at, replied_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        setList((data ?? []) as typeof list);
+        setLoading(false);
+      });
+  }, [open, userId]);
+
+  return (
+    <section className="mt-6 rounded-3xl border border-border/60 bg-card shadow-soft overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-3 p-5 text-left transition-smooth hover:bg-muted/30"
+      >
+        <div className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <Inbox className="h-4 w-4" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h2 className="font-display text-lg">我的反馈</h2>
+          <p className="text-xs text-muted-foreground">查看你提交过的反馈与官方回复。</p>
+        </div>
+        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="px-5 pb-5 space-y-2">
+          {loading ? (
+            <p className="py-6 text-center text-xs text-muted-foreground">加载中…</p>
+          ) : list.length === 0 ? (
+            <p className="py-6 text-center text-xs text-muted-foreground">还没有提交过反馈</p>
+          ) : list.map((f) => (
+            <div key={f.id} className="rounded-2xl border border-border/60 bg-background p-4">
+              <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                <span>{new Date(f.created_at).toLocaleDateString("zh-CN")}</span>
+                <span className={`rounded-full px-2 py-0.5 ${f.status === "replied" ? "bg-primary/10 text-primary" : "bg-muted"}`}>
+                  {f.status === "replied" ? "已回复" : "处理中"}
+                </span>
+              </div>
+              <p className="mt-1 whitespace-pre-wrap text-sm">{f.content}</p>
+              {f.reply && (
+                <div className="mt-2 rounded-xl bg-primary/5 px-3 py-2 text-xs">
+                  <span className="font-medium text-primary">官方回复：</span>
+                  <span className="ml-1 whitespace-pre-wrap">{f.reply}</span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function DeleteAccountSection() {
+  const [busy, setBusy] = useState(false);
+  const navigate = useNavigate();
+  const onDelete = async () => {
+    if (!window.confirm("确定要永久注销账号吗？\n所有打卡、帖子、宠物、头像、评论将被删除，且无法恢复。")) return;
+    if (!window.confirm("最后一次确认：真的要删除账号吗？")) return;
+    setBusy(true);
+    const { data, error } = await supabase.functions.invoke("delete-account", { body: {} });
+    if (error || data?.error) {
+      setBusy(false);
+      toast.error(data?.error || error?.message || "注销失败，请重试");
+      return;
+    }
+    await supabase.auth.signOut();
+    toast.success("账号已注销");
+    navigate({ to: "/" });
+  };
+
+  return (
+    <button
+      onClick={onDelete}
+      disabled={busy}
+      className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full border border-destructive/30 bg-card py-2.5 text-sm text-destructive transition-smooth hover:bg-destructive/10 disabled:opacity-60"
+    >
+      <ShieldAlert className="h-4 w-4" /> {busy ? "正在注销…" : "注销账号"}
+    </button>
+  );
+}
+
 function FeedbackSection() {
   const { user } = useAuth();
   const [category, setCategory] = useState("suggestion");
