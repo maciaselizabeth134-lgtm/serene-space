@@ -4,7 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { MessageCircle, Heart, Plus, Sparkles, Trash2, Trophy } from "lucide-react";
+import { MessageCircle, Heart, Plus, Sparkles, Trash2, Trophy, MoreHorizontal, Flag, ShieldOff } from "lucide-react";
 import { PET_CATALOG, STAGE_LABELS, stageFromDays, type PetSpecies, type PetStage } from "@/components/PetCreature";
 import { AvatarWithPet } from "@/components/AvatarWithPet";
 import {
@@ -14,6 +14,14 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ReportDialog } from "@/components/ReportDialog";
+import { moderateText } from "@/lib/moderation";
 
 export const Route = createFileRoute("/community")({
   head: () => ({
@@ -99,6 +107,25 @@ function CommunityPage() {
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState<string>("all");
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
+  const [reportTarget, setReportTarget] = useState<{ id: string; userId: string } | null>(null);
+
+  useEffect(() => {
+    if (!user) { setBlockedIds(new Set()); return; }
+    supabase.from("user_blocks").select("blocked_id").eq("blocker_id", user.id).then(({ data }) => {
+      setBlockedIds(new Set((data ?? []).map((r) => r.blocked_id)));
+    });
+  }, [user]);
+
+  const blockUser = async (uid: string) => {
+    if (!user) return toast.error("请先登录");
+    if (uid === user.id) return;
+    if (!window.confirm("屏蔽后将不再看到 TA 的内容")) return;
+    await supabase.from("user_blocks").insert({ blocker_id: user.id, blocked_id: uid });
+    setBlockedIds((s) => new Set([...s, uid]));
+    setPosts((prev) => prev.filter((p) => p.user_id !== uid));
+    toast.success("已屏蔽");
+  };
 
   // On first mount: read saved category, or show picker
   useEffect(() => {
