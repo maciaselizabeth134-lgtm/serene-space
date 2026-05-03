@@ -433,7 +433,7 @@ function CommunityPage() {
               <p className="mt-3 text-sm text-muted-foreground">还没有帖子,成为第一个分享的人吧。</p>
             </div>
           ) : (
-            posts.map((post) => (
+            posts.filter((p) => !blockedIds.has(p.user_id)).map((post) => (
               <article
                 key={post.id}
                 className="rounded-3xl border border-border/60 bg-card p-6 shadow-soft transition-smooth hover:-translate-y-0.5"
@@ -451,7 +451,9 @@ function CommunityPage() {
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5 text-sm">
-                      <span className="font-medium text-foreground truncate">{post.profiles?.username ?? "匿名同行"}</span>
+                      <Link to="/u/$userId" params={{ userId: post.user_id }} className="font-medium text-foreground truncate hover:text-primary">
+                        {post.profiles?.username ?? "匿名同行"}
+                      </Link>
                       <span className="inline-flex items-center gap-1 rounded-full bg-gradient-primary/10 border border-primary/20 px-2 py-0.5 text-[10px] font-medium text-primary">
                         Lv.{(post.author_stage ?? 0) + 1} · {STAGE_LABELS[post.author_stage ?? 0]}
                       </span>
@@ -471,6 +473,21 @@ function CommunityPage() {
                       <span>{new Date(post.created_at).toLocaleDateString("zh-CN")}</span>
                     </div>
                   </div>
+                  {user && user.id !== post.user_id && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className="text-muted-foreground hover:text-foreground">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setReportTarget({ id: post.id, userId: post.user_id })}>
+                          <Flag className="mr-2 h-4 w-4" /> 举报
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => blockUser(post.user_id)}>
+                          <ShieldOff className="mr-2 h-4 w-4" /> 屏蔽该用户
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
                 <h2 className="mt-3 font-display text-xl">{post.title}</h2>
                 <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{post.content}</p>
@@ -537,6 +554,16 @@ function CommunityPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {reportTarget && (
+        <ReportDialog
+          open={!!reportTarget}
+          onOpenChange={(v) => !v && setReportTarget(null)}
+          targetType="post"
+          targetId={reportTarget.id}
+          targetUserId={reportTarget.userId}
+        />
+      )}
     </AppShell>
   );
 }
