@@ -588,6 +588,8 @@ function NewPostForm({
     if (!user) return;
     if (title.trim().length < 2) return toast.error("标题太短");
     if (content.trim().length < 5) return toast.error("内容太短");
+    const mod = await moderateText(`${title}\n${content}`);
+    if (!mod.ok) return toast.error("内容不符合社区规范，请修改后再发布");
     setSubmitting(true);
     const { error } = await supabase.from("posts").insert({
       user_id: user.id,
