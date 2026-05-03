@@ -1,7 +1,10 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Users, CalendarCheck, Leaf, Sparkles, User } from "lucide-react";
-import { ReactNode } from "react";
+import { Home, Users, CalendarCheck, Leaf, Sparkles, User, Bell } from "lucide-react";
+import { ReactNode, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
+import { PrivacyGate } from "@/components/PrivacyGate";
 
 const nav = [
   { to: "/", label: "首页", icon: Home },
@@ -13,8 +16,31 @@ const nav = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
+  const { user } = useAuth();
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    if (!user) { setUnread(0); return; }
+    let cancelled = false;
+    const load = async () => {
+      const { count } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("read", false);
+      if (!cancelled) setUnread(count ?? 0);
+    };
+    load();
+    const ch = supabase
+      .channel(`noti-${user.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, () => load())
+      .subscribe();
+    return () => { cancelled = true; supabase.removeChannel(ch); };
+  }, [user]);
+
   return (
     <div className="min-h-screen flex flex-col">
+      <PrivacyGate />
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/70 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <Link to="/" className="flex items-center gap-2 group">
@@ -44,12 +70,28 @@ export function AppShell({ children }: { children: ReactNode }) {
               );
             })}
           </nav>
-          <Link
-            to="/profile"
-            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm transition-smooth hover:shadow-soft"
-          >
-            我的
-          </Link>
+          <div className="flex items-center gap-2">
+            {user && (
+              <Link
+                to="/notifications"
+                aria-label="消息中心"
+                className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card transition-smooth hover:shadow-soft"
+              >
+                <Bell className="h-4 w-4" />
+                {unread > 0 && (
+                  <span className="absolute -top-1 -right-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-destructive-foreground">
+                    {unread > 99 ? "99+" : unread}
+                  </span>
+                )}
+              </Link>
+            )}
+            <Link
+              to="/profile"
+              className="rounded-full border border-border bg-card px-4 py-1.5 text-sm transition-smooth hover:shadow-soft"
+            >
+              我的
+            </Link>
+          </div>
         </div>
       </header>
 

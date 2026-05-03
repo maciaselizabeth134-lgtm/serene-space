@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Heart, Cloud } from "lucide-react";
+import { moderateText } from "@/lib/moderation";
 
 export const Route = createFileRoute("/confessions")({
   head: () => ({
@@ -61,6 +62,8 @@ function ConfessionsPage() {
     e.preventDefault();
     if (!user) return toast.error("请先登录");
     if (content.trim().length < 3) return toast.error("内容太短");
+    const mod = await moderateText(content);
+    if (!mod.ok) return toast.error("内容不符合社区规范，换种表达再试试 🌿");
     setSubmitting(true);
     const { error } = await supabase.from("confessions").insert({
       user_id: user.id,

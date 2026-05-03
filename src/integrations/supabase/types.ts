@@ -107,6 +107,9 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          replied_at: string | null
+          reply: string | null
+          status: string
           user_id: string
         }
         Insert: {
@@ -115,6 +118,9 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          replied_at?: string | null
+          reply?: string | null
+          status?: string
           user_id: string
         }
         Update: {
@@ -123,6 +129,9 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          replied_at?: string | null
+          reply?: string | null
+          status?: string
           user_id?: string
         }
         Relationships: []
@@ -152,6 +161,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications: {
+        Row: {
+          actor_id: string | null
+          content: string | null
+          created_at: string
+          id: string
+          read: boolean
+          target_id: string | null
+          target_type: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          read?: boolean
+          target_id?: string | null
+          target_type?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          read?: boolean
+          target_id?: string | null
+          target_type?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       pet_rewards: {
         Row: {
@@ -267,6 +312,60 @@ export type Database = {
           quit_start_date?: string | null
           updated_at?: string
           username?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string
+          detail: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          status: string
+          target_id: string
+          target_type: string
+          target_user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          status?: string
+          target_id: string
+          target_type: string
+          target_user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string
+          target_id?: string
+          target_type?: string
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
         }
         Relationships: []
       }

@@ -2,3 +2,9 @@ project_id = "asidizotfvuzjskmxvcu"
 
 [functions.pet-chat]
 verify_jwt = false
+
+[functions.moderate-text]
+verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = false
