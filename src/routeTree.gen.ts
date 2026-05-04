@@ -19,6 +19,7 @@ import { Route as ConfessionsRouteImport } from './routes/confessions'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CheckinRouteImport } from './routes/checkin'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AboutAppRouteImport } from './routes/about-app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UUserIdRouteImport } from './routes/u.$userId'
@@ -73,6 +74,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AchievementsRoute = AchievementsRouteImport.update({
+  id: '/achievements',
+  path: '/achievements',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AboutAppRoute = AboutAppRouteImport.update({
   id: '/about-app',
   path: '/about-app',
@@ -92,6 +98,7 @@ const UUserIdRoute = UUserIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about-app': typeof AboutAppRoute
+  '/achievements': typeof AchievementsRoute
   '/auth': typeof AuthRoute
   '/checkin': typeof CheckinRoute
   '/community': typeof CommunityRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about-app': typeof AboutAppRoute
+  '/achievements': typeof AchievementsRoute
   '/auth': typeof AuthRoute
   '/checkin': typeof CheckinRoute
   '/community': typeof CommunityRoute
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about-app': typeof AboutAppRoute
+  '/achievements': typeof AchievementsRoute
   '/auth': typeof AuthRoute
   '/checkin': typeof CheckinRoute
   '/community': typeof CommunityRoute
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about-app'
+    | '/achievements'
     | '/auth'
     | '/checkin'
     | '/community'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about-app'
+    | '/achievements'
     | '/auth'
     | '/checkin'
     | '/community'
@@ -170,6 +181,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about-app'
+    | '/achievements'
     | '/auth'
     | '/checkin'
     | '/community'
@@ -186,6 +198,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutAppRoute: typeof AboutAppRoute
+  AchievementsRoute: typeof AchievementsRoute
   AuthRoute: typeof AuthRoute
   CheckinRoute: typeof CheckinRoute
   CommunityRoute: typeof CommunityRoute
@@ -271,6 +284,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/achievements': {
+      id: '/achievements'
+      path: '/achievements'
+      fullPath: '/achievements'
+      preLoaderRoute: typeof AchievementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/about-app': {
       id: '/about-app'
       path: '/about-app'
@@ -298,6 +318,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutAppRoute: AboutAppRoute,
+  AchievementsRoute: AchievementsRoute,
   AuthRoute: AuthRoute,
   CheckinRoute: CheckinRoute,
   CommunityRoute: CommunityRoute,
