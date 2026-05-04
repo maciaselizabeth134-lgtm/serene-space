@@ -94,7 +94,11 @@ function NotificationsPage() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm">
-                  <span className="font-medium">{n.actor?.username ?? "有人"}</span>
+                  {n.actor_id ? (
+                    <Link to="/u/$userId" params={{ userId: n.actor_id }} className="font-medium hover:text-primary">{n.actor?.username ?? "有人"}</Link>
+                  ) : (
+                    <span className="font-medium">{n.actor?.username ?? "有人"}</span>
+                  )}
                   <span className="text-muted-foreground"> {labelFor(n.type)}</span>
                 </p>
                 {n.content && <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{n.content}</p>}
