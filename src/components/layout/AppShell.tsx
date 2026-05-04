@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Users, CalendarCheck, Leaf, Sparkles, User, Bell } from "lucide-react";
+import { Home, Users, CalendarCheck, Leaf, Sparkles, User, Bell, Search } from "lucide-react";
 import { ReactNode, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -73,6 +73,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             })}
           </nav>
           <div className="flex items-center gap-2">
+            <Link
+              to="/search"
+              aria-label="搜索"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card transition-smooth hover:shadow-soft"
+            >
+              <Search className="h-4 w-4" />
+            </Link>
             {user && (
               <Link
                 to="/notifications"
