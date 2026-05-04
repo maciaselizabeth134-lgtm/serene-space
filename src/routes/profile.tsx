@@ -4,7 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, User as UserIcon, MessageSquarePlus, Heart, MessageCircle, FileText, Trash2, ChevronDown, Info, ShieldAlert, Inbox } from "lucide-react";
+import { LogOut, User as UserIcon, MessageSquarePlus, Heart, MessageCircle, FileText, Trash2, ChevronDown, Info, ShieldAlert, Inbox, Trophy, BarChart3, Search, Users } from "lucide-react";
 import { moderateText } from "@/lib/moderation";
 import { AvatarWithPet } from "@/components/AvatarWithPet";
 import { PET_CATALOG, stageFromDays, type PetSpecies, type PetStage } from "@/components/PetCreature";
@@ -173,6 +173,7 @@ function ProfilePage() {
         </button>
 
         <FeedbackSection />
+        {user && <QuickToolsSection userId={user.id} />}
         {user && <MyActivitySection userId={user.id} />}
         {user && <MyFeedbackSection userId={user.id} />}
         <AboutLink />
