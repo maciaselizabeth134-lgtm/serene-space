@@ -6,7 +6,9 @@ import { AvatarWithPet } from "@/components/AvatarWithPet";
 import { PET_CATALOG, stageFromDays, type PetSpecies, STAGE_LABELS } from "@/components/PetCreature";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import { ShieldOff, ShieldCheck } from "lucide-react";
+import { ShieldOff, ShieldCheck, Share2 } from "lucide-react";
+import { FollowButton } from "@/components/FollowButton";
+import { SharePoster } from "@/components/SharePoster";
 
 export const Route = createFileRoute("/u/$userId")({
   head: () => ({ meta: [{ title: "用户主页 — 清心" }] }),
@@ -32,6 +34,9 @@ function PublicProfilePage() {
   const [pet, setPet] = useState<Pet | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [blocked, setBlocked] = useState(false);
+  const [followers, setFollowers] = useState(0);
+  const [following, setFollowing] = useState(0);
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -42,6 +47,12 @@ function PublicProfilePage() {
       if (pt && valid.has(pt.pet_type as PetSpecies)) setPet({ pet_type: pt.pet_type as PetSpecies, nickname: pt.nickname });
       const { data: ps } = await supabase.from("posts").select("id, title, content, created_at, category").eq("user_id", userId).order("created_at", { ascending: false }).limit(30);
       setPosts((ps ?? []) as Post[]);
+      const [{ count: fc }, { count: gc }] = await Promise.all([
+        supabase.from("follows").select("follower_id", { count: "exact", head: true }).eq("following_id", userId),
+        supabase.from("follows").select("following_id", { count: "exact", head: true }).eq("follower_id", userId),
+      ]);
+      setFollowers(fc ?? 0);
+      setFollowing(gc ?? 0);
       if (user) {
         const { data: b } = await supabase.from("user_blocks").select("blocked_id").eq("blocker_id", user.id).eq("blocked_id", userId).maybeSingle();
         setBlocked(!!b);
@@ -91,8 +102,22 @@ function PublicProfilePage() {
                   </p>
                   {pet && <p className="mt-1 text-xs text-muted-foreground">🐾 {pet.nickname}</p>}
                 </div>
+                <FollowButton userId={profile.id} />
               </div>
               {profile.bio && <p className="mt-4 whitespace-pre-wrap text-sm text-foreground/90">{profile.bio}</p>}
+              <div className="mt-4 flex items-center gap-4 text-xs">
+                <Link to="/u/$userId/follows" params={{ userId: profile.id }} search={{ tab: "following" }} className="hover:text-primary">
+                  <span className="font-display text-base">{following}</span>
+                  <span className="ml-1 text-muted-foreground">关注</span>
+                </Link>
+                <Link to="/u/$userId/follows" params={{ userId: profile.id }} search={{ tab: "followers" }} className="hover:text-primary">
+                  <span className="font-display text-base">{followers}</span>
+                  <span className="ml-1 text-muted-foreground">粉丝</span>
+                </Link>
+                <button onClick={() => setShareOpen(true)} className="ml-auto inline-flex items-center gap-1 text-muted-foreground hover:text-primary">
+                  <Share2 className="h-3.5 w-3.5" /> 分享
+                </button>
+              </div>
               {user && user.id !== profile.id && (
                 <button
                   onClick={toggleBlock}
@@ -119,6 +144,9 @@ function PublicProfilePage() {
           </>
         )}
       </div>
+      {profile && (
+        <SharePoster open={shareOpen} onOpenChange={setShareOpen} username={profile.username} days={days} />
+      )}
     </AppShell>
   );
 }
