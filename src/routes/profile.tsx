@@ -4,7 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, User as UserIcon, MessageSquarePlus, Heart, MessageCircle, FileText, Trash2, ChevronDown, Info, ShieldAlert, Inbox } from "lucide-react";
+import { LogOut, User as UserIcon, MessageSquarePlus, Heart, MessageCircle, FileText, Trash2, ChevronDown, Info, ShieldAlert, Inbox, Trophy, BarChart3, Search, Users } from "lucide-react";
 import { moderateText } from "@/lib/moderation";
 import { AvatarWithPet } from "@/components/AvatarWithPet";
 import { PET_CATALOG, stageFromDays, type PetSpecies, type PetStage } from "@/components/PetCreature";
@@ -173,6 +173,7 @@ function ProfilePage() {
         </button>
 
         <FeedbackSection />
+        {user && <QuickToolsSection userId={user.id} />}
         {user && <MyActivitySection userId={user.id} />}
         {user && <MyFeedbackSection userId={user.id} />}
         <AboutLink />
@@ -190,6 +191,51 @@ const FEEDBACK_CATEGORIES = [
 ];
 
 function AboutLink() {
+  return _AboutLinkInner();
+}
+
+function QuickToolsSection({ userId }: { userId: string }) {
+  const [counts, setCounts] = useState({ followers: 0, following: 0 });
+  useEffect(() => {
+    Promise.all([
+      supabase.from("follows").select("follower_id", { count: "exact", head: true }).eq("following_id", userId),
+      supabase.from("follows").select("following_id", { count: "exact", head: true }).eq("follower_id", userId),
+    ]).then(([a, b]) => setCounts({ followers: a.count ?? 0, following: b.count ?? 0 }));
+  }, [userId]);
+
+  const items = [
+    { to: "/achievements" as const, icon: Trophy, label: "成就勋章", desc: "查看里程碑与分享海报" },
+    { to: "/stats" as const, icon: BarChart3, label: "数据统计", desc: "打卡热力 · 分类分析" },
+    { to: "/search" as const, icon: Search, label: "搜索", desc: "查找帖子和用户" },
+  ];
+
+  return (
+    <section className="mt-6 rounded-3xl border border-border/60 bg-card p-5 shadow-soft">
+      <h2 className="font-display text-lg">实用工具</h2>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <Link to="/u/$userId/follows" params={{ userId }} search={{ tab: "following" }}
+          className="flex items-center gap-3 rounded-2xl border border-border/60 bg-background p-3 transition-smooth hover:bg-muted/30">
+          <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary"><Users className="h-4 w-4" /></div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium">关注 {counts.following}</p>
+            <p className="text-[11px] text-muted-foreground">粉丝 {counts.followers}</p>
+          </div>
+        </Link>
+        {items.map((it) => (
+          <Link key={it.to} to={it.to} className="flex items-center gap-3 rounded-2xl border border-border/60 bg-background p-3 transition-smooth hover:bg-muted/30">
+            <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary"><it.icon className="h-4 w-4" /></div>
+            <div className="min-w-0">
+              <p className="text-sm font-medium truncate">{it.label}</p>
+              <p className="text-[11px] text-muted-foreground truncate">{it.desc}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function _AboutLinkInner() {
   return (
     <Link
       to="/about-app"

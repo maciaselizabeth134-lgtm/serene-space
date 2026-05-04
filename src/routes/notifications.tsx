@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, Heart, MessageCircle, Megaphone } from "lucide-react";
+import { Bell, Heart, MessageCircle, Megaphone, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/notifications")({
@@ -71,9 +71,10 @@ function NotificationsPage() {
   const iconFor = (t: string) => {
     if (t === "comment") return <MessageCircle className="h-4 w-4 text-primary" />;
     if (t === "like") return <Heart className="h-4 w-4 text-primary" />;
+    if (t === "follow") return <UserPlus className="h-4 w-4 text-primary" />;
     return <Megaphone className="h-4 w-4 text-primary" />;
   };
-  const labelFor = (t: string) => (t === "comment" ? "评论了你" : t === "like" ? "点赞了你" : "系统消息");
+  const labelFor = (t: string) => (t === "comment" ? "评论了你" : t === "like" ? "点赞了你" : t === "follow" ? "关注了你" : "系统消息");
 
   return (
     <AppShell>
@@ -93,7 +94,11 @@ function NotificationsPage() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm">
-                  <span className="font-medium">{n.actor?.username ?? "有人"}</span>
+                  {n.actor_id ? (
+                    <Link to="/u/$userId" params={{ userId: n.actor_id }} className="font-medium hover:text-primary">{n.actor?.username ?? "有人"}</Link>
+                  ) : (
+                    <span className="font-medium">{n.actor?.username ?? "有人"}</span>
+                  )}
                   <span className="text-muted-foreground"> {labelFor(n.type)}</span>
                 </p>
                 {n.content && <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{n.content}</p>}

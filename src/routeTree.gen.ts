@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as StatsRouteImport } from './routes/stats'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PetRouteImport } from './routes/pet'
@@ -19,13 +21,25 @@ import { Route as ConfessionsRouteImport } from './routes/confessions'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CheckinRouteImport } from './routes/checkin'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AboutAppRouteImport } from './routes/about-app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UUserIdRouteImport } from './routes/u.$userId'
+import { Route as UUserIdFollowsRouteImport } from './routes/u.$userId.follows'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatsRoute = StatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -73,6 +87,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AchievementsRoute = AchievementsRouteImport.update({
+  id: '/achievements',
+  path: '/achievements',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AboutAppRoute = AboutAppRouteImport.update({
   id: '/about-app',
   path: '/about-app',
@@ -88,10 +107,16 @@ const UUserIdRoute = UUserIdRouteImport.update({
   path: '/u/$userId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UUserIdFollowsRoute = UUserIdFollowsRouteImport.update({
+  id: '/follows',
+  path: '/follows',
+  getParentRoute: () => UUserIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about-app': typeof AboutAppRoute
+  '/achievements': typeof AchievementsRoute
   '/auth': typeof AuthRoute
   '/checkin': typeof CheckinRoute
   '/community': typeof CommunityRoute
@@ -101,12 +126,16 @@ export interface FileRoutesByFullPath {
   '/pet': typeof PetRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/search': typeof SearchRoute
+  '/stats': typeof StatsRoute
   '/terms': typeof TermsRoute
-  '/u/$userId': typeof UUserIdRoute
+  '/u/$userId': typeof UUserIdRouteWithChildren
+  '/u/$userId/follows': typeof UUserIdFollowsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about-app': typeof AboutAppRoute
+  '/achievements': typeof AchievementsRoute
   '/auth': typeof AuthRoute
   '/checkin': typeof CheckinRoute
   '/community': typeof CommunityRoute
@@ -116,13 +145,17 @@ export interface FileRoutesByTo {
   '/pet': typeof PetRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/search': typeof SearchRoute
+  '/stats': typeof StatsRoute
   '/terms': typeof TermsRoute
-  '/u/$userId': typeof UUserIdRoute
+  '/u/$userId': typeof UUserIdRouteWithChildren
+  '/u/$userId/follows': typeof UUserIdFollowsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about-app': typeof AboutAppRoute
+  '/achievements': typeof AchievementsRoute
   '/auth': typeof AuthRoute
   '/checkin': typeof CheckinRoute
   '/community': typeof CommunityRoute
@@ -132,14 +165,18 @@ export interface FileRoutesById {
   '/pet': typeof PetRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/search': typeof SearchRoute
+  '/stats': typeof StatsRoute
   '/terms': typeof TermsRoute
-  '/u/$userId': typeof UUserIdRoute
+  '/u/$userId': typeof UUserIdRouteWithChildren
+  '/u/$userId/follows': typeof UUserIdFollowsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/about-app'
+    | '/achievements'
     | '/auth'
     | '/checkin'
     | '/community'
@@ -149,12 +186,16 @@ export interface FileRouteTypes {
     | '/pet'
     | '/privacy'
     | '/profile'
+    | '/search'
+    | '/stats'
     | '/terms'
     | '/u/$userId'
+    | '/u/$userId/follows'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about-app'
+    | '/achievements'
     | '/auth'
     | '/checkin'
     | '/community'
@@ -164,12 +205,16 @@ export interface FileRouteTypes {
     | '/pet'
     | '/privacy'
     | '/profile'
+    | '/search'
+    | '/stats'
     | '/terms'
     | '/u/$userId'
+    | '/u/$userId/follows'
   id:
     | '__root__'
     | '/'
     | '/about-app'
+    | '/achievements'
     | '/auth'
     | '/checkin'
     | '/community'
@@ -179,13 +224,17 @@ export interface FileRouteTypes {
     | '/pet'
     | '/privacy'
     | '/profile'
+    | '/search'
+    | '/stats'
     | '/terms'
     | '/u/$userId'
+    | '/u/$userId/follows'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutAppRoute: typeof AboutAppRoute
+  AchievementsRoute: typeof AchievementsRoute
   AuthRoute: typeof AuthRoute
   CheckinRoute: typeof CheckinRoute
   CommunityRoute: typeof CommunityRoute
@@ -195,8 +244,10 @@ export interface RootRouteChildren {
   PetRoute: typeof PetRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
+  SearchRoute: typeof SearchRoute
+  StatsRoute: typeof StatsRoute
   TermsRoute: typeof TermsRoute
-  UUserIdRoute: typeof UUserIdRoute
+  UUserIdRoute: typeof UUserIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -206,6 +257,20 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stats': {
+      id: '/stats'
+      path: '/stats'
+      fullPath: '/stats'
+      preLoaderRoute: typeof StatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -271,6 +336,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/achievements': {
+      id: '/achievements'
+      path: '/achievements'
+      fullPath: '/achievements'
+      preLoaderRoute: typeof AchievementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/about-app': {
       id: '/about-app'
       path: '/about-app'
@@ -292,12 +364,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UUserIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/u/$userId/follows': {
+      id: '/u/$userId/follows'
+      path: '/follows'
+      fullPath: '/u/$userId/follows'
+      preLoaderRoute: typeof UUserIdFollowsRouteImport
+      parentRoute: typeof UUserIdRoute
+    }
   }
 }
+
+interface UUserIdRouteChildren {
+  UUserIdFollowsRoute: typeof UUserIdFollowsRoute
+}
+
+const UUserIdRouteChildren: UUserIdRouteChildren = {
+  UUserIdFollowsRoute: UUserIdFollowsRoute,
+}
+
+const UUserIdRouteWithChildren =
+  UUserIdRoute._addFileChildren(UUserIdRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutAppRoute: AboutAppRoute,
+  AchievementsRoute: AchievementsRoute,
   AuthRoute: AuthRoute,
   CheckinRoute: CheckinRoute,
   CommunityRoute: CommunityRoute,
@@ -307,8 +398,10 @@ const rootRouteChildren: RootRouteChildren = {
   PetRoute: PetRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
+  SearchRoute: SearchRoute,
+  StatsRoute: StatsRoute,
   TermsRoute: TermsRoute,
-  UUserIdRoute: UUserIdRoute,
+  UUserIdRoute: UUserIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
