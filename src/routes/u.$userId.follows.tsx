@@ -7,7 +7,7 @@ import { FollowButton } from "@/components/FollowButton";
 
 const search = z.object({ tab: z.enum(["followers","following"]).default("following") });
 
-export const Route = createFileRoute("/u/follows")({
+export const Route = createFileRoute("/u/$userId/follows")({
   validateSearch: search,
   head: () => ({ meta: [{ title: "关注 — 清心" }] }),
   component: FollowsPage,
