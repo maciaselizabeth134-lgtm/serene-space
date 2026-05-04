@@ -103,12 +103,12 @@ export function SharePoster({ open, onOpenChange, username, days, achievementNam
           <DialogDescription>长按图片可保存到相册</DialogDescription>
         </DialogHeader>
         <div className="overflow-hidden rounded-xl">
+          <canvas ref={canvasRef} className="hidden" />
           {dataUrl ? (
             <img src={dataUrl} alt="分享海报" className="w-full" />
           ) : (
-            <canvas ref={canvasRef} className="w-full" />
+            <p className="py-12 text-center text-sm text-muted-foreground">生成中…</p>
           )}
-          <canvas ref={canvasRef} className="hidden" />
         </div>
         <button
           onClick={download}
