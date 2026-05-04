@@ -24,8 +24,8 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AboutAppRouteImport } from './routes/about-app'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as UFollowsRouteImport } from './routes/u..follows'
 import { Route as UUserIdRouteImport } from './routes/u.$userId'
+import { Route as UUserIdFollowsRouteImport } from './routes/u.$userId.follows'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -102,15 +102,15 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UFollowsRoute = UFollowsRouteImport.update({
-  id: '/u/follows',
-  path: '/u/follows',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const UUserIdRoute = UUserIdRouteImport.update({
   id: '/u/$userId',
   path: '/u/$userId',
   getParentRoute: () => rootRouteImport,
+} as any)
+const UUserIdFollowsRoute = UUserIdFollowsRouteImport.update({
+  id: '/follows',
+  path: '/follows',
+  getParentRoute: () => UUserIdRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -129,8 +129,8 @@ export interface FileRoutesByFullPath {
   '/search': typeof SearchRoute
   '/stats': typeof StatsRoute
   '/terms': typeof TermsRoute
-  '/u/$userId': typeof UUserIdRoute
-  '/u/follows': typeof UFollowsRoute
+  '/u/$userId': typeof UUserIdRouteWithChildren
+  '/u/$userId/follows': typeof UUserIdFollowsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -148,8 +148,8 @@ export interface FileRoutesByTo {
   '/search': typeof SearchRoute
   '/stats': typeof StatsRoute
   '/terms': typeof TermsRoute
-  '/u/$userId': typeof UUserIdRoute
-  '/u/follows': typeof UFollowsRoute
+  '/u/$userId': typeof UUserIdRouteWithChildren
+  '/u/$userId/follows': typeof UUserIdFollowsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -168,8 +168,8 @@ export interface FileRoutesById {
   '/search': typeof SearchRoute
   '/stats': typeof StatsRoute
   '/terms': typeof TermsRoute
-  '/u/$userId': typeof UUserIdRoute
-  '/u/follows': typeof UFollowsRoute
+  '/u/$userId': typeof UUserIdRouteWithChildren
+  '/u/$userId/follows': typeof UUserIdFollowsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -190,7 +190,7 @@ export interface FileRouteTypes {
     | '/stats'
     | '/terms'
     | '/u/$userId'
-    | '/u/follows'
+    | '/u/$userId/follows'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -209,7 +209,7 @@ export interface FileRouteTypes {
     | '/stats'
     | '/terms'
     | '/u/$userId'
-    | '/u/follows'
+    | '/u/$userId/follows'
   id:
     | '__root__'
     | '/'
@@ -228,7 +228,7 @@ export interface FileRouteTypes {
     | '/stats'
     | '/terms'
     | '/u/$userId'
-    | '/u/follows'
+    | '/u/$userId/follows'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -247,8 +247,7 @@ export interface RootRouteChildren {
   SearchRoute: typeof SearchRoute
   StatsRoute: typeof StatsRoute
   TermsRoute: typeof TermsRoute
-  UUserIdRoute: typeof UUserIdRoute
-  UFollowsRoute: typeof UFollowsRoute
+  UUserIdRoute: typeof UUserIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -358,13 +357,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/u/follows': {
-      id: '/u/follows'
-      path: '/u/follows'
-      fullPath: '/u/follows'
-      preLoaderRoute: typeof UFollowsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/u/$userId': {
       id: '/u/$userId'
       path: '/u/$userId'
@@ -372,8 +364,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UUserIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/u/$userId/follows': {
+      id: '/u/$userId/follows'
+      path: '/follows'
+      fullPath: '/u/$userId/follows'
+      preLoaderRoute: typeof UUserIdFollowsRouteImport
+      parentRoute: typeof UUserIdRoute
+    }
   }
 }
+
+interface UUserIdRouteChildren {
+  UUserIdFollowsRoute: typeof UUserIdFollowsRoute
+}
+
+const UUserIdRouteChildren: UUserIdRouteChildren = {
+  UUserIdFollowsRoute: UUserIdFollowsRoute,
+}
+
+const UUserIdRouteWithChildren =
+  UUserIdRoute._addFileChildren(UUserIdRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -391,8 +401,7 @@ const rootRouteChildren: RootRouteChildren = {
   SearchRoute: SearchRoute,
   StatsRoute: StatsRoute,
   TermsRoute: TermsRoute,
-  UUserIdRoute: UUserIdRoute,
-  UFollowsRoute: UFollowsRoute,
+  UUserIdRoute: UUserIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
