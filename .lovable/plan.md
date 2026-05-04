@@ -100,3 +100,14 @@ src/server/account.functions.ts   新
 
 确认后我开始动手。
 
+
+---
+
+## 第二批已完成
+
+- 关注/粉丝(follows 表 + 通知触发器)、关注按钮、关注/粉丝列表页 `/u/$userId/follows`
+- 数据统计 `/stats`：累计/连续/近30天 + 12周热力 + 分类条形图
+- 成就勋章 `/achievements`：9 级里程碑勋章 + Canvas 分享海报
+- 搜索 `/search`：帖子标题内容 + 用户昵称简介
+- 每日打卡提醒 `DailyReminder`：未打卡时弹悬浮条
+- AppShell 顶部加搜索按钮；通知支持 follow 类型；公开主页加关注/粉丝数与分享
