@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { PrivacyGate } from "@/components/PrivacyGate";
+import { DailyReminder } from "@/components/DailyReminder";
 
 const nav = [
   { to: "/", label: "首页", icon: Home },
@@ -41,6 +42,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
       <PrivacyGate />
+      <DailyReminder />
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/70 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <Link to="/" className="flex items-center gap-2 group">
