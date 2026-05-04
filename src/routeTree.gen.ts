@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as StatsRouteImport } from './routes/stats'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PetRouteImport } from './routes/pet'
@@ -27,6 +29,16 @@ import { Route as UUserIdRouteImport } from './routes/u.$userId'
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatsRoute = StatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -108,6 +120,8 @@ export interface FileRoutesByFullPath {
   '/pet': typeof PetRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/search': typeof SearchRoute
+  '/stats': typeof StatsRoute
   '/terms': typeof TermsRoute
   '/u/$userId': typeof UUserIdRoute
 }
@@ -124,6 +138,8 @@ export interface FileRoutesByTo {
   '/pet': typeof PetRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/search': typeof SearchRoute
+  '/stats': typeof StatsRoute
   '/terms': typeof TermsRoute
   '/u/$userId': typeof UUserIdRoute
 }
@@ -141,6 +157,8 @@ export interface FileRoutesById {
   '/pet': typeof PetRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/search': typeof SearchRoute
+  '/stats': typeof StatsRoute
   '/terms': typeof TermsRoute
   '/u/$userId': typeof UUserIdRoute
 }
@@ -159,6 +177,8 @@ export interface FileRouteTypes {
     | '/pet'
     | '/privacy'
     | '/profile'
+    | '/search'
+    | '/stats'
     | '/terms'
     | '/u/$userId'
   fileRoutesByTo: FileRoutesByTo
@@ -175,6 +195,8 @@ export interface FileRouteTypes {
     | '/pet'
     | '/privacy'
     | '/profile'
+    | '/search'
+    | '/stats'
     | '/terms'
     | '/u/$userId'
   id:
@@ -191,6 +213,8 @@ export interface FileRouteTypes {
     | '/pet'
     | '/privacy'
     | '/profile'
+    | '/search'
+    | '/stats'
     | '/terms'
     | '/u/$userId'
   fileRoutesById: FileRoutesById
@@ -208,6 +232,8 @@ export interface RootRouteChildren {
   PetRoute: typeof PetRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
+  SearchRoute: typeof SearchRoute
+  StatsRoute: typeof StatsRoute
   TermsRoute: typeof TermsRoute
   UUserIdRoute: typeof UUserIdRoute
 }
@@ -219,6 +245,20 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stats': {
+      id: '/stats'
+      path: '/stats'
+      fullPath: '/stats'
+      preLoaderRoute: typeof StatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -328,6 +368,8 @@ const rootRouteChildren: RootRouteChildren = {
   PetRoute: PetRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
+  SearchRoute: SearchRoute,
+  StatsRoute: StatsRoute,
   TermsRoute: TermsRoute,
   UUserIdRoute: UUserIdRoute,
 }
