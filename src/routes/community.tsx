@@ -605,6 +605,15 @@ function NewPostForm({
   const [content, setContent] = useState("");
   const [category, setCategory] = useState(defaultCategory);
   const [submitting, setSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const onPickImage = (f: File | null) => {
+    if (!f) { setImageFile(null); setImagePreview(null); return; }
+    if (f.size > 5 * 1024 * 1024) return toast.error("图片不能超过 5MB");
+    setImageFile(f);
+    setImagePreview(URL.createObjectURL(f));
+  };
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -614,17 +623,29 @@ function NewPostForm({
     const mod = await moderateText(`${title}\n${content}`);
     if (!mod.ok) return toast.error("内容不符合社区规范，请修改后再发布");
     setSubmitting(true);
+    let image_url: string | null = null;
+    if (imageFile) {
+      const ext = imageFile.name.split(".").pop()?.toLowerCase() ?? "jpg";
+      const path = `${user.id}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("post-images").upload(path, imageFile, { contentType: imageFile.type });
+      if (upErr) { setSubmitting(false); return toast.error("图片上传失败：" + upErr.message); }
+      const { data: pub } = supabase.storage.from("post-images").getPublicUrl(path);
+      image_url = pub.publicUrl;
+    }
     const { error } = await supabase.from("posts").insert({
       user_id: user.id,
       title: title.trim(),
       content: content.trim(),
       category,
+      image_url,
     });
     setSubmitting(false);
     if (error) return toast.error(error.message);
     toast.success("已发布");
     setTitle("");
     setContent("");
+    setImageFile(null);
+    setImagePreview(null);
     onCreated();
   };
 
@@ -668,8 +689,22 @@ function NewPostForm({
         maxLength={2000}
         className="mt-3 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary resize-none"
       />
+      {imagePreview && (
+        <div className="mt-3 relative inline-block">
+          <img src={imagePreview} alt="预览" className="max-h-48 rounded-xl border border-border" />
+          <button type="button" onClick={() => onPickImage(null)} className="absolute -top-2 -right-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground">
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      )}
       <div className="mt-3 flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">{content.length}/2000</span>
+        <div className="flex items-center gap-3">
+          <label className="inline-flex items-center gap-1 cursor-pointer rounded-full border border-border px-3 py-1 text-xs text-muted-foreground hover:text-primary hover:border-primary transition-smooth">
+            <ImageIcon className="h-3.5 w-3.5" /> 图片
+            <input type="file" accept="image/*" className="hidden" onChange={(e) => onPickImage(e.target.files?.[0] ?? null)} />
+          </label>
+          <span className="text-xs text-muted-foreground">{content.length}/2000</span>
+        </div>
         <button
           type="submit"
           disabled={submitting}
