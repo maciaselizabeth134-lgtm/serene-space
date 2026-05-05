@@ -6,6 +6,7 @@ import { getTodayQuote } from "@/lib/quotes";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import heroImg from "@/assets/hero-zen.jpg";
+import { AnnouncementBoard } from "@/components/AnnouncementBoard";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -129,6 +130,8 @@ function HomePage() {
           </div>
         </div>
       </section>
+
+      <AnnouncementBoard />
 
       {/* Daily Quote */}
       <section className="mx-auto max-w-4xl px-4 py-12">
