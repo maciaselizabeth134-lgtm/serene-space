@@ -4,7 +4,8 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, User as UserIcon, MessageSquarePlus, Heart, MessageCircle, FileText, Trash2, ChevronDown, Info, ShieldAlert, Inbox, Trophy, BarChart3, Search, Users } from "lucide-react";
+import { LogOut, User as UserIcon, MessageSquarePlus, Heart, MessageCircle, FileText, Trash2, ChevronDown, Info, ShieldAlert, Inbox, Trophy, BarChart3, Search, Users, ShieldCheck } from "lucide-react";
+import { useIsAdmin } from "@/lib/use-admin";
 import { moderateText } from "@/lib/moderation";
 import { AvatarWithPet } from "@/components/AvatarWithPet";
 import { PET_CATALOG, stageFromDays, type PetSpecies, type PetStage } from "@/components/PetCreature";
@@ -174,12 +175,30 @@ function ProfilePage() {
 
         <FeedbackSection />
         {user && <QuickToolsSection userId={user.id} />}
+        <AdminEntry />
         {user && <MyActivitySection userId={user.id} />}
         {user && <MyFeedbackSection userId={user.id} />}
         <AboutLink />
         {user && <DeleteAccountSection />}
       </div>
     </AppShell>
+  );
+}
+
+function AdminEntry() {
+  const { isAdmin } = useIsAdmin();
+  if (!isAdmin) return null;
+  return (
+    <Link to="/admin" className="mt-6 flex w-full items-center gap-3 rounded-3xl border border-primary/30 bg-primary/5 p-5 shadow-soft transition-smooth hover:bg-primary/10">
+      <div className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+        <ShieldCheck className="h-4 w-4" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <h2 className="font-display text-lg">管理后台</h2>
+        <p className="text-xs text-muted-foreground">公告 · 反馈 · 举报 · 精选</p>
+      </div>
+      <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
+    </Link>
   );
 }
 
