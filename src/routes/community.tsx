@@ -4,7 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { MessageCircle, Heart, Plus, Sparkles, Trash2, Trophy, MoreHorizontal, Flag, ShieldOff } from "lucide-react";
+import { MessageCircle, Heart, Plus, Sparkles, Trash2, Trophy, MoreHorizontal, Flag, ShieldOff, Star, Image as ImageIcon, X } from "lucide-react";
 import { PET_CATALOG, STAGE_LABELS, stageFromDays, type PetSpecies, type PetStage } from "@/components/PetCreature";
 import { AvatarWithPet } from "@/components/AvatarWithPet";
 import {
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ReportDialog } from "@/components/ReportDialog";
 import { moderateText } from "@/lib/moderation";
+import { PostComments } from "@/components/PostComments";
 
 export const Route = createFileRoute("/community")({
   head: () => ({
@@ -40,6 +41,8 @@ type Post = {
   content: string;
   category: string;
   created_at: string;
+  image_url?: string | null;
+  featured?: boolean;
   profiles?: { username: string; avatar_url: string | null } | null;
   author_days?: number;
   author_stage?: PetStage;
@@ -109,6 +112,11 @@ function CommunityPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
   const [reportTarget, setReportTarget] = useState<{ id: string; userId: string } | null>(null);
+  const [openComments, setOpenComments] = useState<Set<string>>(new Set());
+
+  const toggleComments = (id: string) => setOpenComments((s) => {
+    const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n;
+  });
 
   useEffect(() => {
     if (!user) { setBlockedIds(new Set()); return; }
@@ -490,7 +498,16 @@ function CommunityPage() {
                   )}
                 </div>
                 <h2 className="mt-3 font-display text-xl">{post.title}</h2>
+                {post.featured && (
+                  <span className="inline-flex items-center gap-1 mt-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-2 py-0.5 text-[10px]">
+                    <Star className="h-3 w-3 fill-current" /> 官方精选
+                  </span>
+                )}
                 <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{post.content}</p>
+                {post.image_url && (
+                  <img src={post.image_url} alt="" loading="lazy"
+                    className="mt-3 max-h-96 w-full rounded-2xl object-cover border border-border/40" />
+                )}
                 <div className="mt-4 flex items-center gap-5 text-xs text-muted-foreground">
                   <button
                     onClick={() => toggleLike(post)}
@@ -499,10 +516,10 @@ function CommunityPage() {
                     <Heart className={`h-4 w-4 ${post.liked ? "fill-current" : ""}`} />
                     {post.likes_count}
                   </button>
-                  <span className="inline-flex items-center gap-1.5">
+                  <button onClick={() => toggleComments(post.id)} className="inline-flex items-center gap-1.5 transition-smooth hover:text-primary">
                     <MessageCircle className="h-4 w-4" />
                     {post.comments_count}
-                  </span>
+                  </button>
                   {user?.id === post.user_id && (
                     <button
                       onClick={() => deletePost(post)}
@@ -513,6 +530,12 @@ function CommunityPage() {
                     </button>
                   )}
                 </div>
+                {openComments.has(post.id) && (
+                  <PostComments
+                    postId={post.id}
+                    onCountChange={(d) => setPosts((prev) => prev.map((p) => p.id === post.id ? { ...p, comments_count: Math.max(0, (p.comments_count ?? 0) + d) } : p))}
+                  />
+                )}
               </article>
             ))
           )}
@@ -582,6 +605,15 @@ function NewPostForm({
   const [content, setContent] = useState("");
   const [category, setCategory] = useState(defaultCategory);
   const [submitting, setSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const onPickImage = (f: File | null) => {
+    if (!f) { setImageFile(null); setImagePreview(null); return; }
+    if (f.size > 5 * 1024 * 1024) return toast.error("图片不能超过 5MB");
+    setImageFile(f);
+    setImagePreview(URL.createObjectURL(f));
+  };
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -591,17 +623,29 @@ function NewPostForm({
     const mod = await moderateText(`${title}\n${content}`);
     if (!mod.ok) return toast.error("内容不符合社区规范，请修改后再发布");
     setSubmitting(true);
+    let image_url: string | null = null;
+    if (imageFile) {
+      const ext = imageFile.name.split(".").pop()?.toLowerCase() ?? "jpg";
+      const path = `${user.id}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("post-images").upload(path, imageFile, { contentType: imageFile.type });
+      if (upErr) { setSubmitting(false); return toast.error("图片上传失败：" + upErr.message); }
+      const { data: pub } = supabase.storage.from("post-images").getPublicUrl(path);
+      image_url = pub.publicUrl;
+    }
     const { error } = await supabase.from("posts").insert({
       user_id: user.id,
       title: title.trim(),
       content: content.trim(),
       category,
+      image_url,
     });
     setSubmitting(false);
     if (error) return toast.error(error.message);
     toast.success("已发布");
     setTitle("");
     setContent("");
+    setImageFile(null);
+    setImagePreview(null);
     onCreated();
   };
 
@@ -645,8 +689,22 @@ function NewPostForm({
         maxLength={2000}
         className="mt-3 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary resize-none"
       />
+      {imagePreview && (
+        <div className="mt-3 relative inline-block">
+          <img src={imagePreview} alt="预览" className="max-h-48 rounded-xl border border-border" />
+          <button type="button" onClick={() => onPickImage(null)} className="absolute -top-2 -right-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground">
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      )}
       <div className="mt-3 flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">{content.length}/2000</span>
+        <div className="flex items-center gap-3">
+          <label className="inline-flex items-center gap-1 cursor-pointer rounded-full border border-border px-3 py-1 text-xs text-muted-foreground hover:text-primary hover:border-primary transition-smooth">
+            <ImageIcon className="h-3.5 w-3.5" /> 图片
+            <input type="file" accept="image/*" className="hidden" onChange={(e) => onPickImage(e.target.files?.[0] ?? null)} />
+          </label>
+          <span className="text-xs text-muted-foreground">{content.length}/2000</span>
+        </div>
         <button
           type="submit"
           disabled={submitting}
