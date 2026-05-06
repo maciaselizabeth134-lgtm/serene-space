@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Camera, User as UserIcon } from "lucide-react";
 import { PetCreature, type PetSpecies, type PetStage } from "@/components/PetCreature";
+import { moderateImage } from "@/lib/moderation";
 
 interface Props {
   userId: string;
@@ -65,6 +66,14 @@ export function AvatarWithPet({
     }
     const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
     const publicUrl = pub.publicUrl;
+    // 图片安全审核
+    const mod = await moderateImage(publicUrl);
+    if (!mod.ok) {
+      await supabase.storage.from("avatars").remove([path]);
+      setUploading(false);
+      toast.error("图片不符合社区规范" + (mod.reason ? `：${mod.reason}` : ""));
+      return;
+    }
     const { error: updErr } = await supabase
       .from("profiles")
       .update({ avatar_url: publicUrl })
