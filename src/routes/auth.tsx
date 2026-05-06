@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Leaf } from "lucide-react";
+import { Leaf, Mail, Smartphone } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -16,6 +16,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const [channel, setChannel] = useState<"email" | "phone">("email");
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,6 +24,56 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [adult, setAdult] = useState(false);
+  // phone OTP state
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  const normalizePhone = (raw: string) => {
+    const v = raw.trim().replace(/\s|-/g, "");
+    if (!v) return "";
+    if (v.startsWith("+")) return v;
+    // 默认中国大陆手机号
+    if (/^1\d{10}$/.test(v)) return `+86${v}`;
+    return v;
+  };
+
+  const sendOtp = async () => {
+    const p = normalizePhone(phone);
+    if (!/^\+\d{8,15}$/.test(p)) return toast.error("请输入有效的手机号");
+    if (mode === "signup") {
+      if (!agreed) return toast.error("请先勾选同意协议");
+      if (!adult) return toast.error("请确认你已年满 18 岁");
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      phone: p,
+      options: {
+        shouldCreateUser: mode === "signup",
+        data: mode === "signup" ? { username: username || p.slice(-4) } : undefined,
+      },
+    });
+    setLoading(false);
+    if (error) return toast.error(error.message.includes("not enabled") ? "手机登录尚未开通，请联系管理员" : error.message);
+    setOtpSent(true);
+    setCooldown(60);
+    const t = setInterval(() => {
+      setCooldown((c) => { if (c <= 1) { clearInterval(t); return 0; } return c - 1; });
+    }, 1000);
+    toast.success("验证码已发送");
+  };
+
+  const verifyOtp = async () => {
+    const p = normalizePhone(phone);
+    if (otp.trim().length < 4) return toast.error("请输入验证码");
+    setLoading(true);
+    const { error } = await supabase.auth.verifyOtp({ phone: p, token: otp.trim(), type: "sms" });
+    setLoading(false);
+    if (error) return toast.error(error.message);
+    toast.success(mode === "signup" ? "注册成功!欢迎加入清心。" : "欢迎回来。");
+    navigate({ to: "/" });
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
