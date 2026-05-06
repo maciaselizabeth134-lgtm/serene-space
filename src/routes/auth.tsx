@@ -127,6 +127,97 @@ function AuthPage() {
             {mode === "login" ? "继续你的修行之路" : "与同行者一起,一步一步前行"}
           </p>
 
+          <div className="mt-5 grid grid-cols-2 gap-1 rounded-full border border-border bg-muted/40 p-1 text-xs">
+            <button
+              type="button"
+              onClick={() => { setChannel("email"); setOtpSent(false); }}
+              className={`inline-flex items-center justify-center gap-1.5 rounded-full py-2 transition-smooth ${channel === "email" ? "bg-card shadow-soft text-foreground" : "text-muted-foreground"}`}
+            >
+              <Mail className="h-3.5 w-3.5" /> 邮箱
+            </button>
+            <button
+              type="button"
+              onClick={() => { setChannel("phone"); setOtpSent(false); }}
+              className={`inline-flex items-center justify-center gap-1.5 rounded-full py-2 transition-smooth ${channel === "phone" ? "bg-card shadow-soft text-foreground" : "text-muted-foreground"}`}
+            >
+              <Smartphone className="h-3.5 w-3.5" /> 手机号
+            </button>
+          </div>
+
+          {channel === "phone" ? (
+            <div className="mt-6 space-y-4">
+              {mode === "signup" && (
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">昵称</label>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    maxLength={30}
+                    placeholder="你希望大家如何称呼你"
+                    className="mt-1 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none transition-smooth focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+              )}
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">手机号</label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="例如 13800138000 或 +85291234567"
+                  className="mt-1 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none transition-smooth focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+                <p className="mt-1 text-[10px] text-muted-foreground">中国大陆号码无需加 +86,海外号请加国际区号(如 +852)</p>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">短信验证码</label>
+                <div className="mt-1 flex gap-2">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    placeholder="6 位验证码"
+                    className="flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none transition-smooth focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                  <button
+                    type="button"
+                    onClick={sendOtp}
+                    disabled={loading || cooldown > 0}
+                    className="shrink-0 rounded-xl border border-primary/40 bg-primary/5 px-3 text-xs font-medium text-primary transition-smooth hover:bg-primary/10 disabled:opacity-50"
+                  >
+                    {cooldown > 0 ? `${cooldown}s` : otpSent ? "重新发送" : "获取验证码"}
+                  </button>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={verifyOtp}
+                disabled={loading || !otpSent}
+                className="w-full rounded-xl bg-gradient-primary py-3 text-sm font-medium text-primary-foreground shadow-soft transition-smooth hover:shadow-glow disabled:opacity-60"
+              >
+                {loading ? "请稍候..." : mode === "login" ? "登 录" : "注 册"}
+              </button>
+              {mode === "signup" && (
+                <div className="space-y-2 pt-2">
+                  <label className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <input type="checkbox" checked={adult} onChange={(e) => setAdult(e.target.checked)} className="mt-0.5" />
+                    <span>我已年满 18 周岁</span>
+                  </label>
+                  <label className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5" />
+                    <span>
+                      我已阅读并同意{" "}
+                      <Link to="/terms" className="text-primary underline-offset-2 hover:underline">《用户协议》</Link>
+                      {" "}和{" "}
+                      <Link to="/privacy" className="text-primary underline-offset-2 hover:underline">《隐私政策》</Link>
+                    </span>
+                  </label>
+                </div>
+              )}
+            </div>
+          ) : (
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             {mode === "signup" && (
               <div>
@@ -199,6 +290,7 @@ function AuthPage() {
               </div>
             )}
           </form>
+          )}
 
           <button
             onClick={() => setMode(mode === "login" ? "signup" : "login")}
