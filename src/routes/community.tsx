@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ReportDialog } from "@/components/ReportDialog";
-import { moderateText } from "@/lib/moderation";
+import { moderateText, moderateImage } from "@/lib/moderation";
 import { PostComments } from "@/components/PostComments";
 
 export const Route = createFileRoute("/community")({
@@ -631,6 +631,12 @@ function NewPostForm({
       if (upErr) { setSubmitting(false); return toast.error("图片上传失败：" + upErr.message); }
       const { data: pub } = supabase.storage.from("post-images").getPublicUrl(path);
       image_url = pub.publicUrl;
+      const imgMod = await moderateImage(image_url);
+      if (!imgMod.ok) {
+        await supabase.storage.from("post-images").remove([path]);
+        setSubmitting(false);
+        return toast.error("图片不符合社区规范" + (imgMod.reason ? `：${imgMod.reason}` : ""));
+      }
     }
     const { error } = await supabase.from("posts").insert({
       user_id: user.id,
