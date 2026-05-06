@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.delete-account]
 verify_jwt = false
+
+[functions.moderate-image]
+verify_jwt = false
