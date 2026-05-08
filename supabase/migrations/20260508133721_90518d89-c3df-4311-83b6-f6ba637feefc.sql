@@ -1,0 +1,1 @@
+ALTER TABLE public.pet_state ADD COLUMN IF NOT EXISTS bonus_days integer NOT NULL DEFAULT 0;

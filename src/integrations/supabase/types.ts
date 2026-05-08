@@ -275,6 +275,7 @@ export type Database = {
       }
       pet_state: {
         Row: {
+          bonus_days: number
           created_at: string
           food: number
           last_break_at: string | null
@@ -286,6 +287,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          bonus_days?: number
           created_at?: string
           food?: number
           last_break_at?: string | null
@@ -297,6 +299,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          bonus_days?: number
           created_at?: string
           food?: number
           last_break_at?: string | null
