@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { PrivacyGate } from "@/components/PrivacyGate";
 import { DailyReminder } from "@/components/DailyReminder";
+import { TeenModeGuard } from "@/components/TeenModeGuard";
 
 const nav = [
   { to: "/", label: "首页", icon: Home },
@@ -104,7 +105,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1">{children}</main>
+      <main className="flex-1">
+        <TeenModeGuard>{children}</TeenModeGuard>
+      </main>
 
       {/* Mobile bottom nav */}
       <nav className="md:hidden sticky bottom-0 z-40 border-t border-border/50 bg-background/90 backdrop-blur-xl">
