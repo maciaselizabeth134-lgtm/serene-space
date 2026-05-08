@@ -662,6 +662,8 @@ function NewPostForm({
   };
 
   return (
+    <>
+    <CrisisHelpDialog open={crisisOpen} onClose={() => setCrisisOpen(false)} />
     <form onSubmit={submit} className="mt-6 rounded-3xl border border-border/60 bg-card p-6 shadow-soft animate-fade-up">
       {lockCategory ? (
         <div className="mb-4 text-xs text-muted-foreground">
