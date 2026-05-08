@@ -242,6 +242,7 @@ export function PetCompanion() {
 
   return (
     <>
+      <CrisisHelpDialog open={crisisOpen} onClose={() => setCrisisOpen(false)} />
       {/* Pet body */}
       <div
         onPointerDown={onPointerDown}
