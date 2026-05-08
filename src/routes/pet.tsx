@@ -35,6 +35,7 @@ type PetState = {
   last_fed_at: string | null;
   last_break_at: string | null;
   total_fed: number;
+  bonus_days: number;
 };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pet-chat`;
@@ -91,7 +92,7 @@ function PetPage() {
       .from("pet_state")
       .update({ satiety: newSatiety, last_satiety_date: today })
       .eq("user_id", uid)
-      .select("food, satiety, last_satiety_date, last_fed_at, last_break_at, total_fed")
+      .select("food, satiety, last_satiety_date, last_fed_at, last_break_at, total_fed, bonus_days")
       .single();
     if (error || !data) return { ...current, satiety: newSatiety, last_satiety_date: today };
     return data as PetState;
@@ -107,7 +108,7 @@ function PetPage() {
     const [{ data: petRow }, { data: prof }, { data: ps }] = await Promise.all([
       supabase.from("user_pets").select("pet_type, nickname").eq("user_id", user.id).maybeSingle(),
       supabase.from("profiles").select("quit_start_date").eq("id", user.id).single(),
-      supabase.from("pet_state").select("food, satiety, last_satiety_date, last_fed_at, last_break_at, total_fed").eq("user_id", user.id).single(),
+      supabase.from("pet_state").select("food, satiety, last_satiety_date, last_fed_at, last_break_at, total_fed, bonus_days").eq("user_id", user.id).single(),
     ]);
 
     const validIds = PET_CATALOG.map((p) => p.id) as string[];
@@ -120,11 +121,12 @@ function PetPage() {
     } else {
       setPet(null);
     }
-    setDays(daysSince(prof?.quit_start_date ?? null));
-
     if (ps) {
       const reconciled = await reconcileSatiety(user.id, ps as PetState);
       setPetState(reconciled);
+      setDays(daysSince(prof?.quit_start_date ?? null) + (reconciled.bonus_days ?? 0));
+    } else {
+      setDays(daysSince(prof?.quit_start_date ?? null));
     }
     setLoading(false);
   };
@@ -180,6 +182,8 @@ function PetPage() {
     setFeeding(true);
     const newFood = petState.food - 1;
     const newSatiety = Math.min(SATIETY_MAX, petState.satiety + 1);
+    const reachedFull = newSatiety >= SATIETY_MAX && petState.satiety < SATIETY_MAX;
+    const newBonus = (petState.bonus_days ?? 0) + (reachedFull ? 1 : 0);
     const { data, error } = await supabase
       .from("pet_state")
       .update({
@@ -187,14 +191,20 @@ function PetPage() {
         satiety: newSatiety,
         last_fed_at: new Date().toISOString(),
         total_fed: petState.total_fed + 1,
+        bonus_days: newBonus,
       })
       .eq("user_id", user.id)
-      .select("food, satiety, last_satiety_date, last_fed_at, last_break_at, total_fed")
+      .select("food, satiety, last_satiety_date, last_fed_at, last_break_at, total_fed, bonus_days")
       .single();
     setFeeding(false);
     if (error || !data) return toast.error(error?.message ?? "喂食失败");
     setPetState(data as PetState);
-    toast.success("吃得好开心~ 🍎");
+    if (reachedFull) {
+      setDays((d) => d + 1);
+      toast.success("ta 吃饱啦!陪伴值 +1 天 🌿✨");
+    } else {
+      toast.success("吃得好开心~ 🍎");
+    }
   };
 
   return (
