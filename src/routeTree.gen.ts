@@ -27,6 +27,7 @@ import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AboutAppRouteImport } from './routes/about-app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UUserIdRouteImport } from './routes/u.$userId'
+import { Route as PrivacySdkRouteImport } from './routes/privacy.sdk'
 import { Route as PrivacyCollectionRouteImport } from './routes/privacy.collection'
 import { Route as UUserIdFollowsRouteImport } from './routes/u.$userId.follows'
 
@@ -120,6 +121,11 @@ const UUserIdRoute = UUserIdRouteImport.update({
   path: '/u/$userId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacySdkRoute = PrivacySdkRouteImport.update({
+  id: '/sdk',
+  path: '/sdk',
+  getParentRoute: () => PrivacyRoute,
+} as any)
 const PrivacyCollectionRoute = PrivacyCollectionRouteImport.update({
   id: '/collection',
   path: '/collection',
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/teen-mode': typeof TeenModeRoute
   '/terms': typeof TermsRoute
   '/privacy/collection': typeof PrivacyCollectionRoute
+  '/privacy/sdk': typeof PrivacySdkRoute
   '/u/$userId': typeof UUserIdRouteWithChildren
   '/u/$userId/follows': typeof UUserIdFollowsRoute
 }
@@ -172,6 +179,7 @@ export interface FileRoutesByTo {
   '/teen-mode': typeof TeenModeRoute
   '/terms': typeof TermsRoute
   '/privacy/collection': typeof PrivacyCollectionRoute
+  '/privacy/sdk': typeof PrivacySdkRoute
   '/u/$userId': typeof UUserIdRouteWithChildren
   '/u/$userId/follows': typeof UUserIdFollowsRoute
 }
@@ -195,6 +203,7 @@ export interface FileRoutesById {
   '/teen-mode': typeof TeenModeRoute
   '/terms': typeof TermsRoute
   '/privacy/collection': typeof PrivacyCollectionRoute
+  '/privacy/sdk': typeof PrivacySdkRoute
   '/u/$userId': typeof UUserIdRouteWithChildren
   '/u/$userId/follows': typeof UUserIdFollowsRoute
 }
@@ -219,6 +228,7 @@ export interface FileRouteTypes {
     | '/teen-mode'
     | '/terms'
     | '/privacy/collection'
+    | '/privacy/sdk'
     | '/u/$userId'
     | '/u/$userId/follows'
   fileRoutesByTo: FileRoutesByTo
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/teen-mode'
     | '/terms'
     | '/privacy/collection'
+    | '/privacy/sdk'
     | '/u/$userId'
     | '/u/$userId/follows'
   id:
@@ -263,6 +274,7 @@ export interface FileRouteTypes {
     | '/teen-mode'
     | '/terms'
     | '/privacy/collection'
+    | '/privacy/sdk'
     | '/u/$userId'
     | '/u/$userId/follows'
   fileRoutesById: FileRoutesById
@@ -416,6 +428,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UUserIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy/sdk': {
+      id: '/privacy/sdk'
+      path: '/sdk'
+      fullPath: '/privacy/sdk'
+      preLoaderRoute: typeof PrivacySdkRouteImport
+      parentRoute: typeof PrivacyRoute
+    }
     '/privacy/collection': {
       id: '/privacy/collection'
       path: '/collection'
@@ -435,10 +454,12 @@ declare module '@tanstack/react-router' {
 
 interface PrivacyRouteChildren {
   PrivacyCollectionRoute: typeof PrivacyCollectionRoute
+  PrivacySdkRoute: typeof PrivacySdkRoute
 }
 
 const PrivacyRouteChildren: PrivacyRouteChildren = {
   PrivacyCollectionRoute: PrivacyCollectionRoute,
+  PrivacySdkRoute: PrivacySdkRoute,
 }
 
 const PrivacyRouteWithChildren =
