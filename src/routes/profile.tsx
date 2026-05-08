@@ -203,6 +203,21 @@ function AdminEntry() {
   );
 }
 
+function TeenModeEntry() {
+  return (
+    <Link to="/teen-mode" className="mt-6 flex w-full items-center gap-3 rounded-3xl border border-border/60 bg-card p-5 shadow-soft transition-smooth hover:bg-muted/30">
+      <div className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+        <Shield className="h-4 w-4" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <h2 className="font-display text-lg">青少年模式</h2>
+        <p className="text-xs text-muted-foreground">为未成年用户提供更安全的使用环境</p>
+      </div>
+      <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
+    </Link>
+  );
+}
+
 const FEEDBACK_CATEGORIES = [
   { value: "suggestion", label: "功能建议" },
   { value: "bug", label: "问题反馈" },
