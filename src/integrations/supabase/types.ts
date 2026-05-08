@@ -355,6 +355,10 @@ export type Database = {
           created_at: string
           id: string
           quit_start_date: string | null
+          teen_mode_enabled: boolean
+          teen_mode_pin: string | null
+          teen_mode_usage_date: string | null
+          teen_mode_usage_minutes: number
           updated_at: string
           username: string
         }
@@ -364,6 +368,10 @@ export type Database = {
           created_at?: string
           id: string
           quit_start_date?: string | null
+          teen_mode_enabled?: boolean
+          teen_mode_pin?: string | null
+          teen_mode_usage_date?: string | null
+          teen_mode_usage_minutes?: number
           updated_at?: string
           username: string
         }
@@ -373,6 +381,10 @@ export type Database = {
           created_at?: string
           id?: string
           quit_start_date?: string | null
+          teen_mode_enabled?: boolean
+          teen_mode_pin?: string | null
+          teen_mode_usage_date?: string | null
+          teen_mode_usage_minutes?: number
           updated_at?: string
           username?: string
         }
