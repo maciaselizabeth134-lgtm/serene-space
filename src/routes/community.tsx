@@ -728,5 +728,6 @@ function NewPostForm({
         </button>
       </div>
     </form>
+    </>
   );
 }
