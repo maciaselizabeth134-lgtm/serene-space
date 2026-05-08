@@ -4,7 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, User as UserIcon, MessageSquarePlus, Heart, MessageCircle, FileText, Trash2, ChevronDown, Info, ShieldAlert, Inbox, Trophy, BarChart3, Search, Users, ShieldCheck } from "lucide-react";
+import { LogOut, User as UserIcon, MessageSquarePlus, Heart, MessageCircle, FileText, Trash2, ChevronDown, Info, ShieldAlert, Inbox, Trophy, BarChart3, Search, Users, ShieldCheck, Shield } from "lucide-react";
 import { useIsAdmin } from "@/lib/use-admin";
 import { moderateText } from "@/lib/moderation";
 import { AvatarWithPet } from "@/components/AvatarWithPet";
@@ -176,6 +176,7 @@ function ProfilePage() {
         <FeedbackSection />
         {user && <QuickToolsSection userId={user.id} />}
         <AdminEntry />
+        <TeenModeEntry />
         {user && <MyActivitySection userId={user.id} />}
         {user && <MyFeedbackSection userId={user.id} />}
         <AboutLink />
