@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as TeenModeRouteImport } from './routes/teen-mode'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -26,11 +27,17 @@ import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AboutAppRouteImport } from './routes/about-app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UUserIdRouteImport } from './routes/u.$userId'
+import { Route as PrivacyCollectionRouteImport } from './routes/privacy.collection'
 import { Route as UUserIdFollowsRouteImport } from './routes/u.$userId.follows'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeenModeRoute = TeenModeRouteImport.update({
+  id: '/teen-mode',
+  path: '/teen-mode',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StatsRoute = StatsRouteImport.update({
@@ -113,6 +120,11 @@ const UUserIdRoute = UUserIdRouteImport.update({
   path: '/u/$userId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyCollectionRoute = PrivacyCollectionRouteImport.update({
+  id: '/collection',
+  path: '/collection',
+  getParentRoute: () => PrivacyRoute,
+} as any)
 const UUserIdFollowsRoute = UUserIdFollowsRouteImport.update({
   id: '/follows',
   path: '/follows',
@@ -131,11 +143,13 @@ export interface FileRoutesByFullPath {
   '/learn': typeof LearnRoute
   '/notifications': typeof NotificationsRoute
   '/pet': typeof PetRoute
-  '/privacy': typeof PrivacyRoute
+  '/privacy': typeof PrivacyRouteWithChildren
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/stats': typeof StatsRoute
+  '/teen-mode': typeof TeenModeRoute
   '/terms': typeof TermsRoute
+  '/privacy/collection': typeof PrivacyCollectionRoute
   '/u/$userId': typeof UUserIdRouteWithChildren
   '/u/$userId/follows': typeof UUserIdFollowsRoute
 }
@@ -151,11 +165,13 @@ export interface FileRoutesByTo {
   '/learn': typeof LearnRoute
   '/notifications': typeof NotificationsRoute
   '/pet': typeof PetRoute
-  '/privacy': typeof PrivacyRoute
+  '/privacy': typeof PrivacyRouteWithChildren
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/stats': typeof StatsRoute
+  '/teen-mode': typeof TeenModeRoute
   '/terms': typeof TermsRoute
+  '/privacy/collection': typeof PrivacyCollectionRoute
   '/u/$userId': typeof UUserIdRouteWithChildren
   '/u/$userId/follows': typeof UUserIdFollowsRoute
 }
@@ -172,11 +188,13 @@ export interface FileRoutesById {
   '/learn': typeof LearnRoute
   '/notifications': typeof NotificationsRoute
   '/pet': typeof PetRoute
-  '/privacy': typeof PrivacyRoute
+  '/privacy': typeof PrivacyRouteWithChildren
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/stats': typeof StatsRoute
+  '/teen-mode': typeof TeenModeRoute
   '/terms': typeof TermsRoute
+  '/privacy/collection': typeof PrivacyCollectionRoute
   '/u/$userId': typeof UUserIdRouteWithChildren
   '/u/$userId/follows': typeof UUserIdFollowsRoute
 }
@@ -198,7 +216,9 @@ export interface FileRouteTypes {
     | '/profile'
     | '/search'
     | '/stats'
+    | '/teen-mode'
     | '/terms'
+    | '/privacy/collection'
     | '/u/$userId'
     | '/u/$userId/follows'
   fileRoutesByTo: FileRoutesByTo
@@ -218,7 +238,9 @@ export interface FileRouteTypes {
     | '/profile'
     | '/search'
     | '/stats'
+    | '/teen-mode'
     | '/terms'
+    | '/privacy/collection'
     | '/u/$userId'
     | '/u/$userId/follows'
   id:
@@ -238,7 +260,9 @@ export interface FileRouteTypes {
     | '/profile'
     | '/search'
     | '/stats'
+    | '/teen-mode'
     | '/terms'
+    | '/privacy/collection'
     | '/u/$userId'
     | '/u/$userId/follows'
   fileRoutesById: FileRoutesById
@@ -255,10 +279,11 @@ export interface RootRouteChildren {
   LearnRoute: typeof LearnRoute
   NotificationsRoute: typeof NotificationsRoute
   PetRoute: typeof PetRoute
-  PrivacyRoute: typeof PrivacyRoute
+  PrivacyRoute: typeof PrivacyRouteWithChildren
   ProfileRoute: typeof ProfileRoute
   SearchRoute: typeof SearchRoute
   StatsRoute: typeof StatsRoute
+  TeenModeRoute: typeof TeenModeRoute
   TermsRoute: typeof TermsRoute
   UUserIdRoute: typeof UUserIdRouteWithChildren
 }
@@ -270,6 +295,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teen-mode': {
+      id: '/teen-mode'
+      path: '/teen-mode'
+      fullPath: '/teen-mode'
+      preLoaderRoute: typeof TeenModeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/stats': {
@@ -384,6 +416,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UUserIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy/collection': {
+      id: '/privacy/collection'
+      path: '/collection'
+      fullPath: '/privacy/collection'
+      preLoaderRoute: typeof PrivacyCollectionRouteImport
+      parentRoute: typeof PrivacyRoute
+    }
     '/u/$userId/follows': {
       id: '/u/$userId/follows'
       path: '/follows'
@@ -393,6 +432,17 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface PrivacyRouteChildren {
+  PrivacyCollectionRoute: typeof PrivacyCollectionRoute
+}
+
+const PrivacyRouteChildren: PrivacyRouteChildren = {
+  PrivacyCollectionRoute: PrivacyCollectionRoute,
+}
+
+const PrivacyRouteWithChildren =
+  PrivacyRoute._addFileChildren(PrivacyRouteChildren)
 
 interface UUserIdRouteChildren {
   UUserIdFollowsRoute: typeof UUserIdFollowsRoute
@@ -417,13 +467,23 @@ const rootRouteChildren: RootRouteChildren = {
   LearnRoute: LearnRoute,
   NotificationsRoute: NotificationsRoute,
   PetRoute: PetRoute,
-  PrivacyRoute: PrivacyRoute,
+  PrivacyRoute: PrivacyRouteWithChildren,
   ProfileRoute: ProfileRoute,
   SearchRoute: SearchRoute,
   StatsRoute: StatsRoute,
+  TeenModeRoute: TeenModeRoute,
   TermsRoute: TermsRoute,
   UUserIdRoute: UUserIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
