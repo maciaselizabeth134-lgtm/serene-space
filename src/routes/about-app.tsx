@@ -28,7 +28,15 @@ function AboutAppPage() {
       <div className="mt-8 space-y-3 text-sm">
         <Link to="/terms" className="block rounded-2xl border border-border/60 bg-card px-4 py-3 transition-smooth hover:bg-muted/30">用户协议</Link>
         <Link to="/privacy" className="block rounded-2xl border border-border/60 bg-card px-4 py-3 transition-smooth hover:bg-muted/30">隐私政策</Link>
+        <Link to="/privacy/collection" className="block rounded-2xl border border-border/60 bg-card px-4 py-3 transition-smooth hover:bg-muted/30">个人信息收集清单</Link>
+        <Link to="/privacy/sdk" className="block rounded-2xl border border-border/60 bg-card px-4 py-3 transition-smooth hover:bg-muted/30">第三方 SDK 目录</Link>
+        <Link to="/teen-mode" className="block rounded-2xl border border-border/60 bg-card px-4 py-3 transition-smooth hover:bg-muted/30">青少年模式</Link>
       </div>
+
+      <p className="mt-6 text-[11px] text-muted-foreground text-center leading-relaxed">
+        ICP 备案号：暂未取得 · 网络文化经营许可：暂未取得
+        <br />运营主体：清心团队 · 客服：通过「我的 → 意见反馈」联系
+      </p>
 
       <p className="mt-10 text-center text-xs text-muted-foreground">
         © 2026 清心 · 愿每一颗心都重获自由与宁静
