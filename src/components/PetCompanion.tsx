@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Send, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PetAvatar } from "./PetAvatar";
+import { detectCrisis } from "@/lib/blocklist";
+import { CrisisHelpDialog } from "./CrisisHelpDialog";
 
 type Msg = { role: "user" | "assistant"; content: string };
 type PetState = "idle" | "happy" | "talking" | "sleeping" | "dragging";
@@ -26,6 +28,7 @@ export function PetCompanion() {
   const [state, setState] = useState<PetState>("idle");
   const [bubble, setBubble] = useState<string | null>(null);
   const [facing, setFacing] = useState<1 | -1>(1); // 1 = facing right, -1 = left
+  const [crisisOpen, setCrisisOpen] = useState(false);
   const dragRef = useRef<{ dx: number; dy: number; moved: boolean; downAt: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastActivityRef = useRef<number>(Date.now());
@@ -169,6 +172,7 @@ export function PetCompanion() {
   async function send() {
     const text = input.trim();
     if (!text || loading) return;
+    if (detectCrisis(text)) setCrisisOpen(true);
     setInput("");
     const userMsg: Msg = { role: "user", content: text };
     const next = [...messages, userMsg];
@@ -238,6 +242,7 @@ export function PetCompanion() {
 
   return (
     <>
+      <CrisisHelpDialog open={crisisOpen} onClose={() => setCrisisOpen(false)} />
       {/* Pet body */}
       <div
         onPointerDown={onPointerDown}

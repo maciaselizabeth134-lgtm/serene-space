@@ -23,6 +23,8 @@ import {
 import { ReportDialog } from "@/components/ReportDialog";
 import { moderateText, moderateImage } from "@/lib/moderation";
 import { PostComments } from "@/components/PostComments";
+import { detectCrisis } from "@/lib/blocklist";
+import { CrisisHelpDialog } from "@/components/CrisisHelpDialog";
 
 export const Route = createFileRoute("/community")({
   head: () => ({
@@ -607,6 +609,7 @@ function NewPostForm({
   const [submitting, setSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [crisisOpen, setCrisisOpen] = useState(false);
 
   const onPickImage = (f: File | null) => {
     if (!f) { setImageFile(null); setImagePreview(null); return; }
@@ -620,6 +623,9 @@ function NewPostForm({
     if (!user) return;
     if (title.trim().length < 2) return toast.error("标题太短");
     if (content.trim().length < 5) return toast.error("内容太短");
+    if (detectCrisis(`${title} ${content}`)) {
+      setCrisisOpen(true);
+    }
     const mod = await moderateText(`${title}\n${content}`);
     if (!mod.ok) return toast.error("内容不符合社区规范，请修改后再发布");
     setSubmitting(true);
@@ -656,6 +662,8 @@ function NewPostForm({
   };
 
   return (
+    <>
+    <CrisisHelpDialog open={crisisOpen} onClose={() => setCrisisOpen(false)} />
     <form onSubmit={submit} className="mt-6 rounded-3xl border border-border/60 bg-card p-6 shadow-soft animate-fade-up">
       {lockCategory ? (
         <div className="mb-4 text-xs text-muted-foreground">
@@ -720,5 +728,6 @@ function NewPostForm({
         </button>
       </div>
     </form>
+    </>
   );
 }

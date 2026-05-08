@@ -4,7 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogOut, User as UserIcon, MessageSquarePlus, Heart, MessageCircle, FileText, Trash2, ChevronDown, Info, ShieldAlert, Inbox, Trophy, BarChart3, Search, Users, ShieldCheck } from "lucide-react";
+import { LogOut, User as UserIcon, MessageSquarePlus, Heart, MessageCircle, FileText, Trash2, ChevronDown, Info, ShieldAlert, Inbox, Trophy, BarChart3, Search, Users, ShieldCheck, Shield } from "lucide-react";
 import { useIsAdmin } from "@/lib/use-admin";
 import { moderateText } from "@/lib/moderation";
 import { AvatarWithPet } from "@/components/AvatarWithPet";
@@ -176,6 +176,7 @@ function ProfilePage() {
         <FeedbackSection />
         {user && <QuickToolsSection userId={user.id} />}
         <AdminEntry />
+        <TeenModeEntry />
         {user && <MyActivitySection userId={user.id} />}
         {user && <MyFeedbackSection userId={user.id} />}
         <AboutLink />
@@ -196,6 +197,21 @@ function AdminEntry() {
       <div className="flex-1 min-w-0">
         <h2 className="font-display text-lg">管理后台</h2>
         <p className="text-xs text-muted-foreground">公告 · 反馈 · 举报 · 精选</p>
+      </div>
+      <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
+    </Link>
+  );
+}
+
+function TeenModeEntry() {
+  return (
+    <Link to="/teen-mode" className="mt-6 flex w-full items-center gap-3 rounded-3xl border border-border/60 bg-card p-5 shadow-soft transition-smooth hover:bg-muted/30">
+      <div className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+        <Shield className="h-4 w-4" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <h2 className="font-display text-lg">青少年模式</h2>
+        <p className="text-xs text-muted-foreground">为未成年用户提供更安全的使用环境</p>
       </div>
       <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
     </Link>
