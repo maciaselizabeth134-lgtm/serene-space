@@ -609,6 +609,7 @@ function NewPostForm({
   const [submitting, setSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [crisisOpen, setCrisisOpen] = useState(false);
 
   const onPickImage = (f: File | null) => {
     if (!f) { setImageFile(null); setImagePreview(null); return; }
