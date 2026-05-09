@@ -32,6 +32,7 @@ function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [pet, setPet] = useState<{ species: PetSpecies; stage: PetStage } | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -122,48 +123,59 @@ function ProfilePage() {
                 onUpdated={(url) => setAvatarUrl(url)}
               />
             )}
-            <p className="text-xs text-muted-foreground">点击头像更换图片</p>
+            <p className="text-base font-medium">{username || "未设置昵称"}</p>
+            <p className="text-xs text-muted-foreground">{user?.email}</p>
           </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">邮箱</label>
-            <p className="mt-1 text-sm text-muted-foreground">{user?.email}</p>
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">昵称</label>
-            <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              maxLength={30}
-              className="mt-1 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">个人简介</label>
-            <textarea
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              rows={3}
-              maxLength={200}
-              placeholder="说说你自己,或写下你的自律宣言..."
-              className="mt-1 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary resize-none"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">自律起始日期</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary"
-            />
-          </div>
+
           <button
-            onClick={save}
-            disabled={saving}
-            className="w-full rounded-full bg-gradient-primary py-2.5 text-sm font-medium text-primary-foreground shadow-soft transition-smooth hover:shadow-glow disabled:opacity-60"
+            type="button"
+            onClick={() => setEditOpen((v) => !v)}
+            className="flex w-full items-center justify-between rounded-2xl border border-border/60 bg-background px-4 py-3 text-sm transition-smooth hover:bg-muted/30"
           >
-            {saving ? "保存中..." : "保存修改"}
+            <span className="font-medium">编辑资料</span>
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${editOpen ? "rotate-180" : ""}`} />
           </button>
+
+          {editOpen && (
+            <div className="space-y-4 pt-1">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">昵称</label>
+                <input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  maxLength={30}
+                  className="mt-1 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">个人简介</label>
+                <textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  rows={3}
+                  maxLength={200}
+                  placeholder="说说你自己,或写下你的自律宣言..."
+                  className="mt-1 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary resize-none"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">自律起始日期</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary"
+                />
+              </div>
+              <button
+                onClick={save}
+                disabled={saving}
+                className="w-full rounded-full bg-gradient-primary py-2.5 text-sm font-medium text-primary-foreground shadow-soft transition-smooth hover:shadow-glow disabled:opacity-60"
+              >
+                {saving ? "保存中..." : "保存修改"}
+              </button>
+            </div>
+          )}
         </div>
 
         <button
